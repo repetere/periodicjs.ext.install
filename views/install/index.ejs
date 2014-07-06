@@ -1,0 +1,117 @@
+<% include ../shared/header %>
+<% include ../shared/nav %>
+	<div class="_pea-container">
+		<div class="_pea-row">
+			<div class="_pea-col-span10 _pea-col-nofloat">
+					<div class="_pea-row _pea-container-forminput _pea-text-center">
+						<h1 class="_pea-h1-logo">
+							<img src="/images/brand/periodic-favicon.png"/>
+						</h1>
+					</div>
+				<div class="_pea-document">
+					<form action="/install/updateconfig" method="post" autocomplete="on" id="login_form" name="login_form" class="_pea-form">
+						<input type="hidden" name="_csrf" value="<%= locals.token %>" >
+						<div class="_pea-row _pea-container-forminput  no-margin">
+							<h2 class="_pea-text-center">Configure to your ECM Instance</h2>
+							<div class="_pea-col-span12">
+								<div class="_pea-row _pea-container-forminput">
+									<label class="_pea-col-span3 _pea-label _pea-text-right">MongoDB Connection URL [?]</label>
+									<input class="_pea-col-span9 noFormSubmit" type="text" placeholder="mongodb://localhost:27017/periodic_dev" value="mongodb://localhost:27017/periodic_dev" name="mongoconnectionurl"/>
+								</div>
+								<div class="_pea-row _pea-container-forminput">
+									<label class="_pea-col-span3 _pea-label _pea-text-right">Cookie Parser [?]</label>
+									<input class="_pea-col-span9 noFormSubmit" type="text" placeholder="<%= pagedata.cookieparser %>" value="<%= pagedata.cookieparser %>" name="cookieparser"/>
+								</div>
+								<div class="_pea-row _pea-container-forminput">
+									<label class="_pea-col-span3 _pea-label _pea-text-right">Application Session Type [?]</label>
+									<% var docstatus = [{
+										"value":"mongo",
+										"label":"Mongo Based Sessions"
+										},{
+										"value":"cookie",
+										"label":"Cookie Based Sessions"
+										},{
+										"value":"false",
+										"label":"Do not use sessions"
+										}]; %>
+									<select name="sessions" class="_pea-col-span9">
+										<% docstatus.forEach(function(status){ %>
+											<option value="<%= status.value %>"><%= status.label %></option>
+										<% }); %>
+									</select>
+								</div>
+								<div class="_pea-row _pea-container-forminput">
+									<label class="_pea-col-span3 _pea-label _pea-text-right">Template Engine [?]</label>
+									<% var docstatus = [{
+										"value":"ejs",
+										"label":"EJS"
+										}]; 
+									%>
+									<select name="template" class="_pea-col-span9">
+										<% docstatus.forEach(function(status){ %>
+											<option value="<%= status.value %>"><%= status.label %></option>
+										<% }); %>
+									</select>
+								</div>
+								<div class="_pea-row _pea-container-forminput">
+									<label class="_pea-col-span3 _pea-label _pea-text-right">Install Theme [?]</label>
+									<% var docstatus = [{
+										"value":"minimal",
+										"label":"Minimal"
+										},{
+										"value":"philosophiae",
+										"label":"Philosophiae"
+										},{
+										"value":"",
+										"label":"Do not install a theme"
+										}]; %>
+									<select name="theme" class="_pea-col-span9">
+										<% docstatus.forEach(function(status){ %>
+											<option value="<%= status.value %>"><%= status.label %></option>
+										<% }); %>
+									</select>
+								</div>
+								<div class="_pea-row _pea-container-forminput">
+									<label class="_pea-col-span3 _pea-label _pea-text-right">Install Admin [?]</label>
+									<% var docstatus = [{
+										"value":"yes",
+										"label":"yes"
+										},{
+										"value":"no",
+										"label":"no"
+										}]; %>
+									<select name="theme" class="_pea-col-span9">
+										<% docstatus.forEach(function(status){ %>
+											<option value="<%= status.value %>"><%= status.label %></option>
+										<% }); %>
+									</select>
+									<div id="admin-install-info">
+										<div class="_pea-row _pea-container-forminput">
+											<label class="_pea-col-span3 _pea-label _pea-text-right">Email </label>
+											<input class="_pea-col-span9 noFormSubmit" type="text" placeholder="name@domain.com" value="" name="cookieparser"/>
+										</div>
+										<div class="_pea-row _pea-container-forminput">
+											<label class="_pea-col-span3 _pea-label _pea-text-right">Username </label>
+											<input class="_pea-col-span9 noFormSubmit" type="text" placeholder="admin" value="" name="username"/>
+										</div>
+										<div class="_pea-row _pea-container-forminput">
+											<label class="_pea-col-span3 _pea-label _pea-text-right">Password</label>
+											<input class="_pea-col-span9 noFormSubmit" type="text" placeholder="<%= pagedata.temppassword %>" value="<%= pagedata.temppassword %>" name="password"/>
+										</div>
+										<div class="_pea-row _pea-container-forminput  no-margin">
+											<label class="_pea-col-span3 _pea-label _pea-text-right">Confirm Password</label>
+											<input class="_pea-col-span9 noFormSubmit" type="password" placeholder="" value="" name="passwordconfirm"/>
+										</div>
+									</div>
+								</div>
+								<div class="_pea-row _pea-container-forminput no-margin _pea-text-center">
+									<input class="_pea-button noFormSubmit _pea-color-success _pea-reg-size" type="submit" value="Get Started" name="install_perdiocjs_button">
+								</div>
+							</div>				
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+<% include ../shared/footer %>

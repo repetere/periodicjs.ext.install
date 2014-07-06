@@ -26,8 +26,12 @@
   ],
   "readme": "periodicjs.ext.sample\n=====================\n\nanother sample extension\n",
   "readmeFilename": "README.md",
-  "_id": "periodicjs.ext.sample@0.0.1",
+  "_id": "periodicjs.ext.install@0.0.1",
   "_shasum": "9c5c8e05ba4372702966f84e590ef53dc88c9aee",
-  "_from": "https://github.com/typesettin/periodicjs.ext.sample/archive/master.tar.gz",
-  "_resolved": "https://github.com/typesettin/periodicjs.ext.sample/archive/master.tar.gz"
+  "_from": "https://github.com/typesettin/periodicjs.ext.install/archive/master.tar.gz",
+  "_resolved": "https://github.com/typesettin/periodicjs.ext.install/archive/master.tar.gz",
+  "bugs": {
+    "url": "https://github.com/typesettin/periodicjs.ext.install/issues"
+  },
+  "homepage": "https://github.com/typesettin/periodicjs.ext.install"
 }
