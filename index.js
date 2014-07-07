@@ -1,5 +1,4 @@
-// var path = require('path'),
-// 	passport = require('passport');
+'use strict';
 
 module.exports = function(periodic){
 	// express,app,logger,config,db,mongoose
@@ -8,6 +7,8 @@ module.exports = function(periodic){
 
 	installRouter.get('/', installController.index);
 	installRouter.get('/install', installController.index);
+	installRouter.get('/install/getlog',installController.get_outputlog);
+	installRouter.post('/install/updateconfig', installController.update);
 
 	periodic.app.use(installRouter);
 };
