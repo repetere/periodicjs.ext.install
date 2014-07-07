@@ -1,27 +1,21 @@
 'use strict';
 
-var formobj = require('./formtoobject'),
-	request = require('superagent'),
-	ribbon = require('ribbonjs'),
-	silkscreen = require('silkscreenjs');
-
-window.addEventListener("load",function(){
-	window.silkscreenModal = new silkscreen(),
-	window.ribbonNotification = new ribbon({type:"info",idSelector:"#_pea_ribbon-element"});
-	preventEnterSubmitListeners();
-},false);
-
 var preventSubmitOnEnter = function(e){
-	// console.log("key press");
-	if ( e.which === 13 || e.keyCode === 13  ) {
-		// console.log(e);
-		// console.log("prevent submit");
-		e.preventDefault();
-		return false;
-	}
+			// console.log("key press");
+			if ( e.which === 13 || e.keyCode === 13  ) {
+				// console.log(e);
+				// console.log("prevent submit");
+				e.preventDefault();
+				return false;
+			}
+		},
+		request = require('superagent'),
+		formobj = require('./formtoobject');
+
+var ajaxform = function(options){
 };
 
-var preventEnterSubmitListeners = function(){
+ajaxform.preventEnterSubmitListeners = function(){
 	var noSubmitElements = document.querySelectorAll('.noFormSubmit');
 	for(var x in noSubmitElements){
 		if(typeof noSubmitElements[x] ==='object'){
@@ -32,7 +26,7 @@ var preventEnterSubmitListeners = function(){
 	document.addEventListener("keypress",preventSubmitOnEnter,false);
 };
 
-window.makeNiceName = function(username) {
+ajaxform.makeNiceName = function(username) {
 	if (username) {
 		return username.replace(/[^a-z0-9]/gi, '-').toLowerCase();
 	}
@@ -41,13 +35,14 @@ window.makeNiceName = function(username) {
 	}
 };
 
-//"._pea-ajax-form" http://www.sitepoint.com/easier-ajax-html5-formdata-interface/
-window.ajaxFormEventListers = function(selector){
+ajaxform.ajaxFormEventListers = function(selector,ribbonNotification){
 	var ajaxforms = document.querySelectorAll(selector);
+	console.log("ajaxforms",ajaxforms);
 	for(var x in ajaxforms){
 		if(typeof ajaxforms[x] ==='object'){
 			// console.log(new FormData(ajaxforms[x]));
 			ajaxforms[x].addEventListener("submit",function(e){
+				e.preventDefault();
 				var f = e.target;
 				if(f.getAttribute("data-beforesubmitfunction")){
 					var beforesubmitFunctionString = f.getAttribute("data-beforesubmitfunction"),
@@ -84,8 +79,9 @@ window.ajaxFormEventListers = function(selector){
 						}
 					});
 
-				e.preventDefault();
 			},false);
 		}
 	}
 };
+
+module.exports = ajaxform;
