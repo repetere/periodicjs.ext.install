@@ -14,6 +14,7 @@ var path = require('path'),
 	extconffile = path.resolve('./periodicjs.ext.json');
 
 ExtensionCore.install({
+		enabled:true,
 		extname:extname,
 		extdir:extdir,
 		extpublicdir:extpublicdir,

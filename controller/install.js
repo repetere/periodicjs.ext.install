@@ -2,16 +2,17 @@
 
 var path = require('path'),
 		async = require('async'),
-		util = require('util'),
 		fs = require('fs-extra'),
-		npm = require('npm'),
 		mongoose = require('mongoose'),
-		appController = require(path.join(process.cwd(),'app/controller/application')),
 		logdir = path.resolve(process.cwd(),'logs/'),
 		logfile = path.join(logdir,'install-periodicjs.log'),
-		applicationController,
-		appSettings,
-		logger;
+    Utilities = require('periodicjs.core.utilities'),
+    ControllerHelper = require('periodicjs.core.controllerhelper'),
+    CoreUtilities,
+    CoreController,
+    appSettings,
+		logger,
+		restartfile = path.join(process.cwd(), '/content/extensions/restart.json');
 
 var errorlog_outputlog = function(options){
 	var logdata = options.logdata+'\r\n ';
@@ -48,7 +49,7 @@ var update_outputlog = function(options){
 	});
 };
 
-var get_outputlog = function(req,res,next){
+var get_outputlog = function(req,res){
 	var stat = fs.statSync(logfile),
 			readStream = fs.createReadStream(logfile);
 
@@ -63,40 +64,20 @@ var configurePeriodic = function(req,res,next,options){
 	var updatesettings = options.updatesettings,
 			userdata = options.userdata,
 			userSchema = require(path.resolve(process.cwd(),'app/model/user.js')),
-			User = mongoose.model('User',userSchema),
-			asyncTasks = {};
-
-	var installExtensionDependencies = function(extname,callback){
-		var extdir = path.join(process.cwd(),'content/extensions/node_modules',extname);
-		console.log("trying to install: ",extname,"to",extdir);
-
-		applicationController.async_run_cmd(
-			'npm',
-			['install','--prefix','content/extensions/node_modules/'+extname+'/','content/extensions/node_modules/'+extname+'/','--production'],
-			function(consoleoutput){
-				update_outputlog({
-					logdata : consoleoutput
-				});
-			},
-			callback
-		);
-		// node index.js --cli --controller extension --install true --name "typesettin/periodicjs.ext.install" --version latest
-		//npm install --prefix content/extensions/node_modules/periodicjs.ext.mailer/ content/extensions/node_modules/periodicjs.ext.mailer/
-	};
-
+			User = mongoose.model('User',userSchema);
 
 	var writeConfJson = function(callback){
 		var confJsonFilePath = path.resolve(process.cwd(),'content/config/config.json'),
 				confJson={
-					"application":{
-						"port": "8786",
-						"environment": "development"
+					'application':{
+						'port': '8786',
+						'environment': 'development'
 					},
-					"cookies":{
-						"cookieParser":updatesettings.cookieparser
+					'cookies':{
+						'cookieParser':updatesettings.cookieparser
 					},
-				  "theme": "periodicjs.theme.default",
-				  "status":"active"
+				  'theme': 'periodicjs.theme.default',
+				  'status':'active'
 				};
 		if(updatesettings.appname){
 			confJson.name = updatesettings.appname;
@@ -107,22 +88,22 @@ var configurePeriodic = function(req,res,next,options){
 		switch(updatesettings.sessions){
 			case 'mongo':
 				confJson.sessions = {
-					"enabled":true,
-					"type":"mongo"
+					'enabled':true,
+					'type':'mongo'
 				};
 				confJson.crsf = true;
 				break;
 			case 'cookie':
 				confJson.sessions = {
-					"enabled":true,
-					"type":"cookie"
+					'enabled':true,
+					'type':'cookie'
 				};
 				confJson.crsf = true;
 				break;
 			default:
 				confJson.sessions = {
-					"enabled":false,
-					"type":"default"
+					'enabled':false,
+					'type':'default'
 				};
 				confJson.crsf = false;
 				break;
@@ -140,7 +121,7 @@ var configurePeriodic = function(req,res,next,options){
 							callback(err,null);
 						}
 						else{
-							callback(null,"updated conf");
+							callback(null,'updated conf',data);
 						}
 					}
 				});
@@ -162,7 +143,7 @@ var configurePeriodic = function(req,res,next,options){
 				ext_admin=false;
 		updateConfSettings.extensions = [];
 
-		if(updatesettings.admin==="true"){
+		if(updatesettings.admin==='true'){
 			fs.readJson(extfilepath,function(err,extConfJSON){
 				if(err){
 					callback(err,null);
@@ -205,30 +186,30 @@ var configurePeriodic = function(req,res,next,options){
 					}
 					//check installs
 					if(!ext_install){
-						callback(new Error("Invalid extension installation: periodicjs.ext.install"),null);
+						callback(new Error('Invalid extension installation: periodicjs.ext.install'),null);
 					}
 					if(!ext_defaultroutes){
-						callback(new Error("Invalid extension installation: periodicjs.ext.defaultroutes"),null);
+						callback(new Error('Invalid extension installation: periodicjs.ext.defaultroutes'),null);
 					}
 					if(!ext_mailer){
-						console.log("ext_mailer",ext_mailer);
-						callback(new Error("Invalid extension installation: periodicjs.ext.mailer"),null);
+						console.log('ext_mailer',ext_mailer);
+						callback(new Error('Invalid extension installation: periodicjs.ext.mailer'),null);
 					}
 					if(!ext_login){
-						console.log("ext_login",ext_login);
-						callback(new Error("Invalid extension installation: periodicjs.ext.login"),null);
+						console.log('ext_login',ext_login);
+						callback(new Error('Invalid extension installation: periodicjs.ext.login'),null);
 					}
 					if(!ext_admin){
-						callback(new Error("Invalid extension installation: periodicjs.ext.admin"),null);
+						callback(new Error('Invalid extension installation: periodicjs.ext.admin'),null);
 					}
 					if(!ext_dbseed){
-						callback(new Error("Invalid extension installation: periodicjs.ext.dbseed"),null);
+						callback(new Error('Invalid extension installation: periodicjs.ext.dbseed'),null);
 					}
 					if(!ext_scheduledcontent){
-						callback(new Error("Invalid extension installation: periodicjs.ext.scheduled_content"),null);
+						callback(new Error('Invalid extension installation: periodicjs.ext.scheduled_content'),null);
 					}
 					if(!ext_useraccescontrol){
-						callback(new Error("Invalid extension installation: periodicjs.ext.user_access_control"),null);
+						callback(new Error('Invalid extension installation: periodicjs.ext.user_access_control'),null);
 					}
 
 					if(ext_install && ext_defaultroutes && ext_mailer && ext_login && ext_useraccescontrol && ext_scheduledcontent && ext_admin && ext_dbseed){
@@ -241,12 +222,12 @@ var configurePeriodic = function(req,res,next,options){
 								update_outputlog({
 									logdata : 'updated conf settings'
 								});
-								callback(null,"updated conf settings");
+								callback(null,'updated conf settings');
 							}
 						});
 					}
 					else{
-						callback(new Error("Invalid extension installation: could not update extensions and install"),null);
+						callback(new Error('Invalid extension installation: could not update extensions and install'),null);
 					}
 				}
 			});
@@ -266,7 +247,7 @@ var configurePeriodic = function(req,res,next,options){
 					}
 					//check installs
 					if(!ext_install){
-						callback(new Error("Invalid extension installation: periodicjs.ext.install"),null);
+						callback(new Error('Invalid extension installation: periodicjs.ext.install'),null);
 					}
 					if(ext_install){
 						updateConfSettings = currentExtensionsConf;
@@ -278,12 +259,12 @@ var configurePeriodic = function(req,res,next,options){
 								update_outputlog({
 									logdata : 'updated conf settings'
 								});
-								callback(null,"updated conf settings");
+								callback(null,'updated conf settings');
 							}
 						});
 					}
 					else{
-						callback(new Error("Invalid extension installation: could not update extensions to disable install extension"),null);
+						callback(new Error('Invalid extension installation: could not update extensions to disable install extension'),null);
 					}
 				}
 			});
@@ -312,19 +293,19 @@ var configurePeriodic = function(req,res,next,options){
 			dbjson+='	}\r\n';
 			dbjson+='};\r\n';
 
-			// logger.silly("restartfile",restartfile);
+			// logger.silly('restartfile',restartfile);
 			fs.outputFile(dbjsfile,dbjson,function(err){
 				if(err){
 					callback(err,null);
 				}
 				else{
-					callback(null,"updated database.json");
+					callback(null,'updated database.json');
 				}
 			});
 		},
 		//create user data
 		function(callback){
-			if(updatesettings.admin==="true"){
+			if(updatesettings.admin==='true'){
 				update_outputlog({
 					logdata : 'creating admin user'
 				});
@@ -339,61 +320,18 @@ var configurePeriodic = function(req,res,next,options){
 				});
 			}
 			else{
-				callback(null,"skipping admin user set up");
-			}
-		},
-		function(callback){
-			if(updatesettings.admin==="true"){
-				// console.log("install admin");
-				// asyncTasks.installMailer = ;
-				// asyncTasks.installLogin = ;
-				// asyncTasks.installAdmin = ;
-				// asyncTasks.installDbseed = ;
-				async.parallel([
-					function(callback){
-						update_outputlog({
-							logdata : 'installing admin extension'
-						});
-						installExtensionDependencies('periodicjs.ext.admin',callback);
-						// node index.js --cli --controller extension --install true --name "typesettin/periodicjs.ext.install" --version latest
-					},
-					function(callback){
-						update_outputlog({
-							logdata : 'installing mailer extension'
-						});
-						installExtensionDependencies('periodicjs.ext.mailer',callback);
-					},
-					function(callback){
-						update_outputlog({
-							logdata : 'installing login extension'
-						});
-						installExtensionDependencies('periodicjs.ext.login',callback);
-						// node index.js --cli --controller extension --install true --name "typesettin/periodicjs.ext.install" --version latest
-					}
-				],
-				function(err,results){
-					if(err){
-						callback(err,null);
-					}
-					else{
-						// console.log("results");
-						callback(null,results);
-					}
-				});
-			}
-			else{
-				callback(null,"skipping extension install for admin");
+				callback(null,'skipping admin user set up');
 			}
 		},
 		function(callback){
 			updateExtensionConf(callback);
 		},
 		function(callback){
-			if(updatesettings.admin==="true"){
+			if(updatesettings.admin==='true'){
 				update_outputlog({
 					logdata : 'seeding database'
 				});
-				applicationController.async_run_cmd(
+				CoreUtilities.async_run_cmd(
 					'node',
 					['index.js','--cli','--extension','dbseed','--task','sampledata'],
 					function(consoleoutput){
@@ -412,7 +350,7 @@ var configurePeriodic = function(req,res,next,options){
 				);
 			}
 			else{
-				callback(null,"skipping seeding database");
+				callback(null,'skipping seeding database');
 			}
 			// node index.js --cli --extension seed --task sampledata
 		},
@@ -429,23 +367,18 @@ var configurePeriodic = function(req,res,next,options){
 			});
 		}
 		else{
+			logger.silly(results);
 			if(options.cli){
 				logger.info('installed, config.conf updated \r\n  ====##CONFIGURED##====');
 				process.exit(0);
 			}
 			else{
-				applicationController.restart_app();
+				CoreUtilities.restart_app({
+					restartfile: restartfile
+				});
 			}
 		}
 	});
-
-
-	// var createUser = 
-
-	// var writeDatabaseJson = 
-
-	// var load_seeddata = 
-
 };
 
 var testmongoconfig = function(req,res,next,options){
@@ -469,7 +402,7 @@ var testmongoconfig = function(req,res,next,options){
 };
 
 var update = function(req, res, next){
-	var updatesettings = applicationController.removeEmptyObjectValues(req.body),
+	var updatesettings = CoreUtilities.removeEmptyObjectValues(req.body),
 			userdata = {
 				username: updatesettings.username,
 				email: updatesettings.email,
@@ -478,10 +411,10 @@ var update = function(req, res, next){
 				password: updatesettings.password,
 				passwordconfirm: updatesettings.passwordconfirm
 			},
-			d = new Date(),
-			badusername = new RegExp(/\bremove\b|\bconfig\b|\bprofile\b|\bindex\b|\bcreate\b|\bdelete\b|\bdestroy\b|\bedit\b|\btrue\b|\bfalse\b|\bupdate\b|\blogin\b|\blogut\b|\bdestroy\b|\bwelcome\b|\bdashboard\b/i);
+			d = new Date();//,
+			// badusername = new RegExp(/\bremove\b|\bconfig\b|\bprofile\b|\bindex\b|\bcreate\b|\bdelete\b|\bdestroy\b|\bedit\b|\btrue\b|\bfalse\b|\bupdate\b|\blogin\b|\blogut\b|\bdestroy\b|\bwelcome\b|\bdashboard\b/i);
 
-	// if (updatesettings.admin==="true" && (userdata.username === undefined || badusername.test(userdata.username))) {
+	// if (updatesettings.admin==='true' && (userdata.username === undefined || badusername.test(userdata.username))) {
 	// 	applicationController.handleDocumentQueryErrorResponse({
 	// 		err:new Error('Invalid username'),
 	// 		res:res,
@@ -489,29 +422,29 @@ var update = function(req, res, next){
 	// 	});
 	// }
 	// else 
-	if (updatesettings.admin==="true" && (userdata.username === undefined || userdata.username.length < 4)) {
-		applicationController.handleDocumentQueryErrorResponse({
+	if (updatesettings.admin==='true' && (userdata.username === undefined || userdata.username.length < 4)) {
+		CoreController.handleDocumentQueryErrorResponse({
 			err:new Error('Username is too short'),
 			res:res,
 			req:req
 		});
 	}
-	else if (updatesettings.admin==="true" && (userdata.email===undefined || userdata.email.match(/^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i) === null)) {
-		applicationController.handleDocumentQueryErrorResponse({
+	else if (updatesettings.admin==='true' && (userdata.email===undefined || userdata.email.match(/^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i) === null)) {
+		CoreController.handleDocumentQueryErrorResponse({
 			err:new Error('Invalid email'),
 			res:res,
 			req:req
 		});
 	}
-	else if (updatesettings.admin==="true" && (userdata.password === undefined || userdata.password.length < 8)) {
-		applicationController.handleDocumentQueryErrorResponse({
+	else if (updatesettings.admin==='true' && (userdata.password === undefined || userdata.password.length < 8)) {
+		CoreController.handleDocumentQueryErrorResponse({
 			err:new Error('Password is too short'),
 			res:res,
 			req:req
 		});
 	}
-	else if (updatesettings.admin==="true" && (userdata.password !== userdata.passwordconfirm)) {
-		applicationController.handleDocumentQueryErrorResponse({
+	else if (updatesettings.admin==='true' && (userdata.password !== userdata.passwordconfirm)) {
+		CoreController.handleDocumentQueryErrorResponse({
 			err:new Error('Passwords do not match'),
 			res:res,
 			req:req
@@ -521,23 +454,23 @@ var update = function(req, res, next){
 		fs.outputFile(logfile,'configuration log '+d+'- \r\n ');
 
 		update_outputlog({
-			logdata : "beginning configuration install: ",
+			logdata : 'beginning configuration install: ',
 			callback : function(err) {
 				if(err) {
-					applicationController.handleDocumentQueryErrorResponse({
+					CoreController.handleDocumentQueryErrorResponse({
 						err:err,
 						res:res,
 						req:req
 					});
 				}
 				else {
-					applicationController.handleDocumentQueryRender({
+					CoreController.handleDocumentQueryRender({
 						res:res,
 						req:req,
 						responseData:{
-							result:"success",
+							result:'success',
 							data:{
-								message:"allgood"
+								message:'allgood'
 							}
 						}
 					});
@@ -551,7 +484,7 @@ var update = function(req, res, next){
 	}
 };
 
-var index = function(req, res, next) {
+var index = function(req, res) {
 	var rand = function() {
 	    return Math.random().toString(36).substr(2); // remove `0.`
 	};
@@ -560,7 +493,7 @@ var index = function(req, res, next) {
 	    return rand() + rand(); // to make it longer
 	};
 
-	applicationController.getPluginViewTemplate({
+	CoreController.getPluginViewTemplate({
 		res:res,
 		req:req,
 		viewname:'install/index',
@@ -568,7 +501,7 @@ var index = function(req, res, next) {
 		themepath:appSettings.themepath,
 		themefileext:appSettings.templatefileextension,
 		callback:function(templatepath){
-			applicationController.handleDocumentQueryRender({
+			CoreController.handleDocumentQueryRender({
 				res:res,
 				req:req,
 				renderView:templatepath,
@@ -591,7 +524,8 @@ var index = function(req, res, next) {
 var controller = function(resources){
 	logger = resources.logger;
 	appSettings = resources.settings;
-	applicationController = new appController(resources);
+  CoreController = new ControllerHelper(resources);
+  CoreUtilities = new Utilities(resources);
 
 	return{
 		index:index,
