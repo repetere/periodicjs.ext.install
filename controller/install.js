@@ -493,7 +493,7 @@ var index = function(req, res) {
 	    return rand() + rand(); // to make it longer
 	};
 
-	CoreController.getPluginViewTemplate({
+	CoreController.getPluginViewDefaultTemplate({
 		res:res,
 		req:req,
 		viewname:'install/index',
