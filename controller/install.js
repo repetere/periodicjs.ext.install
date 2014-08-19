@@ -493,32 +493,31 @@ var index = function(req, res) {
 	    return rand() + rand(); // to make it longer
 	};
 
-	CoreController.getPluginViewDefaultTemplate({
-		res:res,
-		req:req,
-		viewname:'install/index',
-		pluginname:'periodicjs.ext.install',
-		themepath:appSettings.themepath,
-		themefileext:appSettings.templatefileextension,
-		callback:function(templatepath){
-			CoreController.handleDocumentQueryRender({
-				res:res,
-				req:req,
-				renderView:templatepath,
-				responseData:{
-					pagedata:{
-						title:'Welcome to Periodicjs',
-						cookieparser:token(),
-						temppassword:token().substr(0,8)
-					},
-					periodic:{
-						version: appSettings.version
-					},
-					user:req.user
-				}
-			});
-		}
-	});
+	CoreController.getPluginViewDefaultTemplate(
+      {
+          viewname:'install/index',
+          themefileext:appSettings.templatefileextension,
+          extname: 'periodicjs.ext.install'
+      },
+      function(err,templatepath){
+          CoreController.handleDocumentQueryRender({
+              res:res,
+              req:req,
+              renderView:templatepath,
+              responseData:{
+                pagedata:{
+									title:'Welcome to Periodicjs',
+									cookieparser:token(),
+									temppassword:token().substr(0,8)
+								},
+								periodic:{
+									version: appSettings.version
+								},
+								user:req.user
+              }
+          });
+      }
+  );
 };
 
 var controller = function(resources){
