@@ -384,6 +384,7 @@ var configurePeriodic = function(req,res,next,options){
 var testmongoconfig = function(req,res,next,options){
 	var updatesettings = options.updatesettings;
 	if(mongoose.Connection.STATES.connected !== mongoose.connection.readyState){
+		mongoose.disconnect();
 		mongoose.connect(updatesettings.mongoconnectionurl, function(err) {
 			if (err){
 				errorlog_outputlog({
