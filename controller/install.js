@@ -324,7 +324,7 @@ var configurePeriodic = function(req,res,next,options){
 					}
 					else{
 						callback(null,userdata);
-						console.log('welcomeemailtemplate',welcomeemailtemplate);
+						// console.log('welcomeemailtemplate',welcomeemailtemplate);
 						if(welcomeemailtemplate && emailtransport){
 							User.sendWelcomeUserEmail({
 								subject: updatesettings.appname+' New User Registration',
