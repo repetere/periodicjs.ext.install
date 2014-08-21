@@ -20,7 +20,7 @@
 								</div>
 								<div class="_pea-row _pea-container-forminput">
 									<label class="_pea-col-span3 _pea-label _pea-text-right">MongoDB Connection URL <a class="_pea-toottip pop-tooltip" data-id="tt-mongodb">[?]</a></label>
-									<input class="_pea-col-span9 noFormSubmit" type="text" placeholder="mongodb://localhost:27017/periodicjs_development" value="mongodb://localhost:27017/periodicjs_development" name="mongoconnectionurl"/>
+									<input class="_pea-col-span9 noFormSubmit" type="text" value="<%= pagedata.databaseurl%>" disabled="disabled" name="mongoconnectionurl"/>
 								</div>
 								<div class="_pea-row _pea-container-forminput">
 									<label class="_pea-col-span3 _pea-label _pea-text-right">Cookie Parser <a class="_pea-toottip pop-tooltip" data-id="tt-cookieparser">[?]</a></label>
@@ -144,7 +144,8 @@
 			</p>
 		</div>
 		<div id="tt-mongodb" data-title="MongoDB Connection URI">
-			<p>Periodicjs requires a mongodb database to store documents, for help installing locally check out <a href="http://docs.mongodb.org/manual/installation/">Installing MongoDB Locally</a> or use a free mongo hosting server like <a href="https://mongolab.com/">MongoLab</a></p>
+			<p>Periodicjs requires a mongodb database to store documents, <strong class="_pea-color-error">update "content/config/database.js" to update your mongo settings</strong></p>
+			<p>For help installing locally check out <a href="http://docs.mongodb.org/manual/installation/">Installing MongoDB Locally</a> or use a free mongo hosting server like <a href="https://mongolab.com/">MongoLab</a></p>
 			<p>The standard format of the MongoDB connection URI used to connect to a MongoDB database server. The format is the same forall official MongoDB drivers.</p>
 			<p> For full documentation on connection URIs, see <a href="http://docs.mongodb.org/manual/reference/connection-string/"><em>MongoDB Connection String URI Format</em></a>.
 			</p>

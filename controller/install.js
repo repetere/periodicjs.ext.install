@@ -8,10 +8,16 @@ var path = require('path'),
 		logfile = path.join(logdir,'install-periodicjs.log'),
     Utilities = require('periodicjs.core.utilities'),
     ControllerHelper = require('periodicjs.core.controllerhelper'),
+	  CoreMailer = require('periodicjs.core.mailer'),
     CoreUtilities,
     CoreController,
     appSettings,
 		logger,
+		databaseurl,
+		welcomeemailtemplate,
+		emailtransport,
+		User,
+		userSchema,
 		restartfile = path.join(process.cwd(), '/content/extensions/restart.json');
 
 var errorlog_outputlog = function(options){
@@ -62,9 +68,7 @@ var get_outputlog = function(req,res){
 
 var configurePeriodic = function(req,res,next,options){
 	var updatesettings = options.updatesettings,
-			userdata = options.userdata,
-			userSchema = require(path.resolve(process.cwd(),'app/model/user.js')),
-			User = mongoose.model('User',userSchema);
+			userdata = options.userdata;
 
 	var writeConfJson = function(callback){
 		var confJsonFilePath = path.resolve(process.cwd(),'content/config/config.json'),
@@ -81,6 +85,10 @@ var configurePeriodic = function(req,res,next,options){
 				};
 		if(updatesettings.appname){
 			confJson.name = updatesettings.appname;
+		}
+		if(updatesettings.admin){
+			confJson.adminnotificationemail = userdata.email;
+			confJson.homepage = userdata.email;
 		}
 		if(updatesettings.themename){
 			confJson.theme = updatesettings.themename;
@@ -316,6 +324,25 @@ var configurePeriodic = function(req,res,next,options){
 					}
 					else{
 						callback(null,userdata);
+						console.log('welcomeemailtemplate',welcomeemailtemplate);
+						if(welcomeemailtemplate && emailtransport){
+							User.sendWelcomeUserEmail({
+								subject: updatesettings.appname+' New User Registration',
+								user:userdata,
+								hostname:req.headers.host,
+								appname:updatesettings.appname,
+								emailtemplate:welcomeemailtemplate,
+								// bcc:'yje2@cornell.edu',
+								mailtransport:emailtransport
+							},function(err,status){
+								if(err){
+									console.log(err);
+								}
+								else{
+									console.info('email status',status);
+								}
+							});
+						}
 					}
 				});
 			}
@@ -359,7 +386,9 @@ var configurePeriodic = function(req,res,next,options){
 		}
 	],
 	//final result
-	function(err,results){
+	function(err
+		//,results
+		){
 		if(err){
 			errorlog_outputlog({
 				logdata : err.message,
@@ -367,7 +396,7 @@ var configurePeriodic = function(req,res,next,options){
 			});
 		}
 		else{
-			logger.silly(results);
+			// logger.silly(results);
 			if(options.cli){
 				logger.info('installed, config.conf updated \r\n  ====##CONFIGURED##====');
 				process.exit(0);
@@ -384,7 +413,6 @@ var configurePeriodic = function(req,res,next,options){
 var testmongoconfig = function(req,res,next,options){
 	var updatesettings = options.updatesettings;
 	if(mongoose.Connection.STATES.connected !== mongoose.connection.readyState){
-		mongoose.disconnect();
 		mongoose.connect(updatesettings.mongoconnectionurl, function(err) {
 			if (err){
 				errorlog_outputlog({
@@ -414,6 +442,7 @@ var update = function(req, res, next){
 			},
 			d = new Date();//,
 			// badusername = new RegExp(/\bremove\b|\bconfig\b|\bprofile\b|\bindex\b|\bcreate\b|\bdelete\b|\bdestroy\b|\bedit\b|\btrue\b|\bfalse\b|\bupdate\b|\blogin\b|\blogut\b|\bdestroy\b|\bwelcome\b|\bdashboard\b/i);
+		updatesettings.mongoconnectionurl = databaseurl;
 
 	// if (updatesettings.admin==='true' && (userdata.username === undefined || badusername.test(userdata.username))) {
 	// 	applicationController.handleDocumentQueryErrorResponse({
@@ -486,6 +515,7 @@ var update = function(req, res, next){
 };
 
 var index = function(req, res) {
+	// console.log('mongoose.connection',mongoose.connection);
 	var rand = function() {
 	    return Math.random().toString(36).substr(2); // remove `0.`
 	};
@@ -509,6 +539,7 @@ var index = function(req, res) {
                 pagedata:{
 									title:'Welcome to Periodicjs',
 									cookieparser:token(),
+									databaseurl:databaseurl,
 									temppassword:token().substr(0,8)
 								},
 								periodic:{
@@ -522,10 +553,41 @@ var index = function(req, res) {
 };
 
 var controller = function(resources){
+	databaseurl = resources.db.url;
 	logger = resources.logger;
 	appSettings = resources.settings;
+	userSchema = require(path.resolve(process.cwd(),'app/model/user.js'));
+	User = mongoose.model('User',userSchema);
   CoreController = new ControllerHelper(resources);
   CoreUtilities = new Utilities(resources);
+
+  CoreController.getPluginViewDefaultTemplate(
+		{
+			viewname:'email/user/welcome',
+			themefileext:appSettings.templatefileextension
+		},
+		function(err,templatepath){
+			if(templatepath ==='email/user/welcome'){
+				templatepath = path.resolve(process.cwd(),'app/views',templatepath+'.'+appSettings.templatefileextension);
+			}
+			User.getWelcomeEmailTemplate({templatefile:templatepath},function(err,emailtemplate){
+				if(err){
+					console.error(err);
+				}
+				else{
+					welcomeemailtemplate = emailtemplate;						  			
+				}
+			});
+		}
+	);
+	CoreMailer.getTransport({appenvironment : appSettings.application.environment},function(err,transport){
+		if(err){
+			console.error(err);
+		}
+		else{
+			emailtransport = transport;						  			
+		}
+	});
 
 	return{
 		index:index,
