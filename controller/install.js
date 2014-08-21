@@ -40,7 +40,9 @@ var update_outputlog = function(options){
 	fs.appendFile(logfile,logdata,function(err){
 		if(err){
 			logger.error(err);
-			callback(err);
+			if(callback){
+				callback(err);
+			}
 			//try and write message to end console
 			errorlog_outputlog({
 				logfile : logfile,
