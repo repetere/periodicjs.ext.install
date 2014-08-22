@@ -90,7 +90,7 @@ var configurePeriodic = function(req,res,next,options){
 		}
 		if(updatesettings.admin){
 			confJson.adminnotificationemail = userdata.email;
-			confJson.homepage = userdata.email;
+			confJson.homepage = req.headers.host;
 		}
 		if(updatesettings.themename){
 			confJson.theme = updatesettings.themename;
@@ -283,6 +283,7 @@ var configurePeriodic = function(req,res,next,options){
 
 	async.series([
 		//write database json
+		/*
 		function(callback){
 			var dbjson='',
 					dbjsfile=path.join(process.cwd(),'/content/config/database.js');
@@ -313,6 +314,7 @@ var configurePeriodic = function(req,res,next,options){
 				}
 			});
 		},
+		*/
 		//create user data
 		function(callback){
 			if(updatesettings.admin==='true'){
@@ -322,7 +324,7 @@ var configurePeriodic = function(req,res,next,options){
 				User.fastRegisterUser(userdata,function(err,userdata){
 					if(err){
 						callback(err,null);
-						mongoose.connection.close();
+						// mongoose.connection.close();
 					}
 					else{
 						callback(null,userdata);
@@ -334,7 +336,6 @@ var configurePeriodic = function(req,res,next,options){
 								hostname:req.headers.host,
 								appname:updatesettings.appname,
 								emailtemplate:welcomeemailtemplate,
-								// bcc:'yje2@cornell.edu',
 								mailtransport:emailtransport
 							},function(err,status){
 								if(err){
