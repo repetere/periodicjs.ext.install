@@ -74,10 +74,12 @@ var configurePeriodic = function(req,res,next,options){
 
 	var writeConfJson = function(callback){
 		var confJsonFilePath = path.resolve(process.cwd(),'content/config/config.json'),
+			confport = (appSettings.application.port) ? appSettings.application.port : '8786' ,
+			confenv = (appSettings.application.environment) ? appSettings.application.environment : 'development' ,
 				confJson={
 					'application':{
-						'port': '8786',
-						'environment': 'development'
+						'port': confport,
+						'environment': confenv
 					},
 					'cookies':{
 						'cookieParser':updatesettings.cookieparser
