@@ -2,10 +2,15 @@
 
 var path = require('path'),
 	fs = require('fs-extra'),
+	skipconffile = typeof process.env.npm_config_skip_install_periodic_ext ==='string',
 	Extensions = require('periodicjs.core.extensions'),
-	ExtensionCore = new Extensions({
-		extensionFilePath: path.resolve(__dirname,'../../content/extensions/extensions.json') 
-	}),
+	ExtensionCore = (skipconffile) ? 
+		new Extensions({
+			skipconffile:skipconffile,
+		}) : 
+		new Extensions({
+			extensionFilePath: path.resolve(__dirname,'../../content/extensions/extensions.json') 
+		}),
 	packagejsonFileJSON = fs.readJSONSync(path.resolve('./package.json')),
 	extname = packagejsonFileJSON.name,
 	extdir = path.resolve( './public'),
@@ -13,10 +18,13 @@ var path = require('path'),
 	extpackfile = path.resolve('./package.json'),
 	extconffile = path.resolve('./periodicjs.ext.json');
 
+// console.log('skipconffile',skipconffile);
+
 ExtensionCore.install({
 		enabled:true,
 		extname:extname,
 		extdir:extdir,
+		skipconffile:skipconffile,
 		extpublicdir:extpublicdir,
 		extpackfile:extpackfile,
 		extconffile:extconffile
