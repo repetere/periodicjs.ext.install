@@ -84,7 +84,7 @@ var configurePeriodic = function(req,res,next,options){
 					'cookies':{
 						'cookieParser':updatesettings.cookieparser
 					},
-				  'theme': 'periodicjs.theme.default',
+				  'theme': 'periodicjs.theme.periodical',
 				  'status':'active'
 				};
 		if(updatesettings.appname){
