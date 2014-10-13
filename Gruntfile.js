@@ -1,33 +1,14 @@
 /*
- * domhelper
- * http://github.com/yawetse/domhelper
+ * periodicjs.ext.install
+ * http://github.com/typesettin/periodicjs.ext.install
  *
  * Copyright (c) 2014 Yaw Joseph Etse. All rights reserved.
  */
 'use strict';
 var path = require('path');
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
   grunt.initConfig({
-    jsbeautifier: {
-      files: ['<%= jshint.all %>'],
-      options: {
-        'indent_size': 2,
-        'indent_char': ' ',
-        'indent_level': 0,
-        'indent_with_tabs': false,
-        'preserve_newlines': true,
-        'max_preserve_newlines': 10,
-        'brace_style': 'collapse',
-        'keep_array_indentation': false,
-        'keep_function_indentation': false,
-        'space_before_conditional': true,
-        'eval_code': false,
-        'indent_case': false,
-        'unescape_strings': false,
-        'space_after_anon_function': true
-      }
-    },
     simplemocha: {
       options: {
         globals: ['should'],
@@ -47,19 +28,29 @@ module.exports = function(grunt) {
       all: [
         'Gruntfile.js',
         'index.js',
-        'contoller/**/*.js',
+        'controller/**/*.js',
         'resources/**/*.js',
         'test/**/*.js',
       ]
     },
-    jsdoc : {
-        dist : {
-            src: ['lib/*.js', 'test/*.js'],
-            options: {
-                destination: 'doc/html',
-                configure: 'jsdoc.json'
-            }
+    jsbeautifier: {
+      files: ['<%= jshint.all %>'],
+      options: {
+        config: '.jsbeautify'
+      }
+    },
+    jsdoc: {
+      dist: {
+        src: [
+          'index.js',
+          'controller/**/*.js',
+          'resources/**/*.js',
+        ],
+        options: {
+          destination: 'doc/html',
+          configure: 'jsdoc.json'
         }
+      }
     },
     browserify: {
       dist: {
@@ -101,17 +92,25 @@ module.exports = function(grunt) {
         }]
       }
     },
+    copy: {
+      main: {
+        cwd: 'public',
+        expand: true,
+        src: '**/*.*',
+        dest: '../../public/extensions/periodicjs.ext.install',
+      },
+    },
     watch: {
       scripts: {
         // files: '**/*.js',
         files: [
           'Gruntfile.js',
           'index.js',
-          'contoller/**/*.js',
+          'controller/**/*.js',
           'resources/**/*.js',
           'test/**/*.js',
         ],
-        tasks: ['lint','browserify','jsbeautifier','uglify',/*'doc',*/ 'test'],
+        tasks: ['lint', 'packagejs', 'copy', /*'doc',*/ 'test'],
         options: {
           interrupt: true
         }
@@ -119,16 +118,17 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.loadNpmTasks('grunt-simple-mocha');
-  grunt.loadNpmTasks('grunt-jsbeautifier');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-browserify');
-  grunt.loadNpmTasks('grunt-uglify');
-  grunt.loadNpmTasks('grunt-jsdoc');
 
-  grunt.registerTask('default', ['jshint', 'jsbeautifier', 'simplemocha']);
-  grunt.registerTask('lint', 'jshint');
-  grunt.registerTask('doc','jsdoc');
+  // Loading dependencies
+  for (var key in grunt.file.readJSON('package.json').devDependencies) {
+    if (key.indexOf('grunt') === 0 && key !== 'grunt') {
+      grunt.loadNpmTasks(key);
+    }
+  }
+
+  grunt.registerTask('default', ['jshint', 'simplemocha']);
+  grunt.registerTask('lint', 'jshint', 'jsbeautifier');
+  grunt.registerTask('packagejs', ['browserify', 'uglify']);
+  grunt.registerTask('doc', 'jsdoc');
   grunt.registerTask('test', 'simplemocha');
 };
