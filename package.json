@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.install",
   "description": "install extensions for periodicjs",
-  "version": "1.90.20",
+  "version": "1.90.26",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
@@ -25,7 +25,7 @@
     "fs-extra": "0.9.1",
     "optimist": "^0.6.1",
     "periodicjs.core.controller": "~1.90.10",
-    "periodicjs.core.extensions": "~1.90.10",
+    "periodicjs.core.extensions": "~1.90.16",
     "periodicjs.core.mailer": "~1.90.10",
     "periodicjs.core.utilities": "~1.90.10",
     "ribbonjs": "0.1.3",
