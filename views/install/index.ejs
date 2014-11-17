@@ -27,6 +27,10 @@
 									<input class="_pea-col-span9 noFormSubmit" type="text" placeholder="<%= pagedata.cookieparser %>" value="<%= pagedata.cookieparser %>" name="cookieparser"/>
 								</div>
 								<div class="_pea-row _pea-container-forminput">
+									<label class="_pea-col-span3 _pea-label _pea-text-right">Session Secret <a class="_pea-toottip pop-tooltip" data-id="tt-sessions">[?]</a></label>
+									<input class="_pea-col-span9 noFormSubmit" type="text" placeholder="<%= pagedata.session_secret %>" value="<%= pagedata.session_secret %>" name="session_secret"/>
+								</div>
+								<div class="_pea-row _pea-container-forminput">
 									<label class="_pea-col-span3 _pea-label _pea-text-right">Application Session Type <a class="_pea-toottip pop-tooltip" data-id="tt-sessions">[?]</a></label>
 									<% var docstatus = [{
 										"value":"mongo",

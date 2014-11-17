@@ -105,7 +105,7 @@ var configurePeriodic = function(req,res,next,options){
 		var confJsonFilePath = path.resolve(process.cwd(),'content/config/config.json'),
 			confport = (appSettings.application.port) ? appSettings.application.port : '8786' ,
 			confenv = (appSettings.application.environment) ? appSettings.application.environment : 'development' ,
-				confJson={
+			confJson={
 					'application':{
 						'port': confport,
 						'environment': confenv
@@ -114,8 +114,12 @@ var configurePeriodic = function(req,res,next,options){
 						'cookieParser':updatesettings.cookieparser
 					},
 				  'theme': 'periodicjs.theme.reader',
+					'session_secret':updatesettings.session_secret,
 				  'status':'active'
-				};
+				},
+			envconfJsonFilePath = path.resolve(process.cwd(),'content/config/environment/'+confenv+'.json'),
+			envconfJson = {},
+			globalconfJson ={};
 		if(updatesettings.appname){
 			confJson.name = updatesettings.appname;
 		}
@@ -150,23 +154,37 @@ var configurePeriodic = function(req,res,next,options){
 				break;
 		}
 
-		fs.outputJson(confJsonFilePath,confJson,function(err,data){
-			if(err){
-				callback(err,null);
-			}
-			else{
-				update_outputlog({
-					logdata : 'installed, config.conf updated \r\n  ====##CONFIGURED##====',
-					callback : function(err){
-						if(err){
-							callback(err,null);
+		globalconfJson.sessions = confJson.sessions;
+		globalconfJson.status = confJson.status;
+		globalconfJson.session_secret = confJson.session_secret;
+		globalconfJson.cookies = confJson.cookies;
+		envconfJson = confJson;
+
+		async.parallel([
+				function(asyncCB){
+					fs.outputJson(confJsonFilePath,globalconfJson,asyncCB);
+				},
+				function(asyncCB){
+					fs.outputJson(envconfJsonFilePath,envconfJson,asyncCB);
+				}
+			],
+			function(err,data){
+				if(err){
+					callback(err,null);
+				}
+				else{
+					update_outputlog({
+						logdata : 'installed, config.conf updated \r\n  ====##CONFIGURED##====',
+						callback : function(err){
+							if(err){
+								callback(err,null);
+							}
+							else{
+								callback(null,'updated conf',data);
+							}
 						}
-						else{
-							callback(null,'updated conf',data);
-						}
-					}
-				});
-			}
+					});
+				}
 		});
 	};
 
@@ -599,6 +617,7 @@ var index = function(req, res) {
 									title:'Welcome to Periodicjs',
 									cookieparser:token(),
 									databaseurl:databaseurl,
+									session_secret: token(),
 									temppassword:token().substr(0,8)
 								},
 								periodic:{
