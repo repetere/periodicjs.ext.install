@@ -15,6 +15,7 @@ module.exports = function (periodic) {
 	var installRouter = periodic.express.Router(),
 		installController = require('./controller/install')(periodic);
 
+	installRouter.get('*', global.CoreCache.disableCache);
 	installRouter.get('/', installController.index);
 	installRouter.get('/install', installController.index);
 	installRouter.get('/install/getlog', installController.get_outputlog);

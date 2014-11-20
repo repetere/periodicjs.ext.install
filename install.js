@@ -7,7 +7,8 @@ var Extensions = require('periodicjs.core.extensions'),
 
 ExtensionCore.install({
 		enabled:true,
-		movebefore:'periodicjs.ext.default_routes'
+		movebefore:'periodicjs.ext.default_routes',
+		installatindex: 0
 	},
 	function(err,status){
 		if(err){

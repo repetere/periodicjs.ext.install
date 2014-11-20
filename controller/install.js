@@ -16,6 +16,7 @@ var path = require('path'),
 		databaseurl,
 		welcomeemailtemplate,
 		emailtransport,
+		appenvironment,
 		User,
 		userSchema,
 		restartfile = path.join(process.cwd(), '/content/extensions/restart.json');
@@ -618,6 +619,8 @@ var index = function(req, res) {
 									cookieparser:token(),
 									databaseurl:databaseurl,
 									session_secret: token(),
+									appenvironment: appenvironment,
+									appname: appSettings.name,
 									temppassword:token().substr(0,8)
 								},
 								periodic:{
@@ -655,6 +658,7 @@ var controller = function(resources){
 	User = mongoose.model('User',userSchema);
   CoreController = new ControllerHelper(resources);
   CoreUtilities = new Utilities(resources);
+	appenvironment = appSettings.application.environment;
 
   CoreController.getPluginViewDefaultTemplate(
 		{
