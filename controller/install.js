@@ -197,7 +197,7 @@ var configurePeriodic = function(req,res,next,options){
 	var updateExtensionConf = function(callback){
 		var updateConfSettings = {},
 				currentExtensionsConf,
-				extfilepath=path.join(process.cwd(),'/content/extensions/extensions.json'),
+				extfilepath=path.join(process.cwd(),'/content/config/extensions.json'),
 				ext_install=false,
 				ext_mailer=false,
 				ext_login=false,

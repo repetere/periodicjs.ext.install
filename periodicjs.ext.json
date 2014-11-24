@@ -1,5 +1,4 @@
 {
-	"name": "periodicjs.ext.install",
-	"periodicCompatibility":"3.0.0",
+	"periodicCompatibility":"3.1.1",
 	"periodicDependencies": []
 }
