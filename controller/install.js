@@ -19,7 +19,7 @@ var path = require('path'),
 		appenvironment,
 		User,
 		userSchema,
-		restartfile = path.join(process.cwd(), '/content/extensions/restart.json');
+		restartfile = path.join(process.cwd(), '/content/config/restart.json');
 
 
 /**
