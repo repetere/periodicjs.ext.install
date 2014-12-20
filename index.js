@@ -12,8 +12,11 @@
  */
 module.exports = function (periodic) {
 	// express,app,logger,config,db,mongoose
+	periodic.app.controller.extension.install = {
+		install: require('./controller/install')(periodic)
+	};
 	var installRouter = periodic.express.Router(),
-		installController = require('./controller/install')(periodic);
+		installController = periodic.app.controller.extension.install.install;
 
 	installRouter.get('*', global.CoreCache.disableCache);
 	installRouter.get('/', installController.index);
@@ -23,4 +26,5 @@ module.exports = function (periodic) {
 	installRouter.get('/*', installController.index);
 
 	periodic.app.use(installRouter);
+	return periodic;
 };
