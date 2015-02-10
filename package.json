@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.install",
   "description": "install extensions for periodicjs",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "main": "index.js",
   "engines": {
     "node": ">=0.10.x"
@@ -26,10 +26,11 @@
     "optimist": "^0.6.1",
     "periodicjs.core.controller": "~3.1.1",
     "periodicjs.core.extensions": "~4.0.1",
+    "periodicjs.core.mailer": "~4.0.0",
     "periodicjs.core.utilities": "~3.1.1",
-    "periodicjs.core.mailer": "~3.1.1",
     "ribbonjs": "0.1.3",
     "silkscreenjs": "1.0.0",
+    "utils-merge": "1.0.0",
     "superagent": "0.21.0"
   },
   "devDependencies": {
@@ -56,14 +57,30 @@
   "keywords": [
     "periodicjs"
   ],
-  "readme": "periodicjs.ext.sample\n=====================\n\nanother sample extension\n",
-  "readmeFilename": "README.md",
-  "_id": "periodicjs.ext.install@0.0.1",
-  "_shasum": "9c5c8e05ba4372702966f84e590ef53dc88c9aee",
-  "_from": "https://github.com/typesettin/periodicjs.ext.install/archive/master.tar.gz",
-  "_resolved": "https://github.com/typesettin/periodicjs.ext.install/archive/master.tar.gz",
+  "_id": "periodicjs.ext.install@4.0.0",
+  "_shasum": "cf14de0dbf534b3766f4aa3e8d7893d60273661f",
+  "_from": "periodicjs.ext.install@4.0.0",
+  "_resolved": "https://registry.npmjs.org/periodicjs.ext.install/-/periodicjs.ext.install-4.0.0.tgz",
   "bugs": {
     "url": "https://github.com/typesettin/periodicjs.ext.install/issues"
   },
-  "homepage": "https://github.com/typesettin/periodicjs.ext.install"
+  "homepage": "https://github.com/typesettin/periodicjs.ext.install",
+  "gitHead": "2b07205a3c5e0d868a0c41613783b09c23dd89bf",
+  "_npmVersion": "2.0.0-beta.0",
+  "_npmUser": {
+    "name": "yawetse",
+    "email": "yaw.etse@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "yawetse",
+      "email": "yaw.etse@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "cf14de0dbf534b3766f4aa3e8d7893d60273661f",
+    "tarball": "http://registry.npmjs.org/periodicjs.ext.install/-/periodicjs.ext.install-4.0.0.tgz"
+  },
+  "directories": {},
+  "readme": "ERROR: No README data found!"
 }

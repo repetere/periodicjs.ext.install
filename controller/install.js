@@ -2,6 +2,7 @@
 
 var path = require('path'),
 		async = require('async'),
+		extend = require('utils-merge'),
 		fs = require('fs-extra'),
 		mongoose = require('mongoose'),
 		logdir = path.resolve(process.cwd(),'logs/'),
@@ -11,11 +12,10 @@ var path = require('path'),
 	  CoreMailer = require('periodicjs.core.mailer'),
     CoreUtilities,
     CoreController,
+    loginExtSettings,
     appSettings,
 		logger,
 		databaseurl,
-		welcomeemailtemplate,
-		emailtransport,
 		appenvironment,
 		User,
 		userSchema,
@@ -376,33 +376,35 @@ var configurePeriodic = function(req,res,next,options){
 				update_outputlog({
 					logdata : 'creating admin user'
 				});
-				User.fastRegisterUser(userdata,function(err,userdata){
-					if(err){
-						callback(err,null);
-						// mongoose.connection.close();
+				
+				var newuseroptions = {
+					newuser: userdata,
+					lognewuserin: false,
+					req: req,
+					send_new_user_email: loginExtSettings.new_user_validation.send_new_user_email,
+					welcomeemaildata: {
+						getEmailTemplateFunction: CoreController.getPluginViewDefaultTemplate,
+						emailviewname: 'email/user/welcome',
+						themefileext: appSettings.templatefileextension,
+						sendEmailFunction: CoreMailer.sendEmail,
+						subject: appSettings.name + ' New User Registration',
+						replyto: appSettings.adminnotificationemail,
+						hostname: req.headers.host,
+						appenvironment: appenvironment,
+						appname: appSettings.name,
 					}
-					else{
-						callback(null,userdata);
-						// console.log('welcomeemailtemplate',welcomeemailtemplate);
-						if(welcomeemailtemplate && emailtransport){
-							User.sendWelcomeUserEmail({
-								subject: updatesettings.appname+' New User Registration',
-								user:userdata,
-								hostname:req.headers.host,
-								appname:updatesettings.appname,
-								emailtemplate:welcomeemailtemplate,
-								mailtransport:emailtransport
-							},function(err,status){
-								if(err){
-									console.log(err);
-								}
-								else{
-									console.info('email status',status);
-								}
-							});
+				};
+				User.createNewUserAccount(
+					newuseroptions,
+					function (newusererr, newuser ) {
+						if(newusererr){
+							callback(newusererr,null);
+							// mongoose.connection.close();
 						}
-					}
-				});
+						else{
+							callback(null,newuser);
+						}
+					});
 			}
 			else{
 				callback(null,'skipping admin user set up');
@@ -513,42 +515,13 @@ var update = function(req, res, next){
 				password: updatesettings.password,
 				passwordconfirm: updatesettings.passwordconfirm
 			},
-			d = new Date();//,
-			// badusername = new RegExp(/\bremove\b|\bconfig\b|\bprofile\b|\bindex\b|\bcreate\b|\bdelete\b|\bdestroy\b|\bedit\b|\btrue\b|\bfalse\b|\bupdate\b|\blogin\b|\blogut\b|\bdestroy\b|\bwelcome\b|\bdashboard\b/i);
+			d = new Date(),
+			userValidationError = User.checkValidation(extend({newuser:userdata}, loginExtSettings.new_user_validation));
 		updatesettings.mongoconnectionurl = databaseurl;
 
-	// if (updatesettings.admin==='true' && (userdata.username === undefined || badusername.test(userdata.username))) {
-	// 	applicationController.handleDocumentQueryErrorResponse({
-	// 		err:new Error('Invalid username'),
-	// 		res:res,
-	// 		req:req
-	// 	});
-	// }
-	// else 
-	if (updatesettings.admin==='true' && (userdata.username === undefined || userdata.username.length < 4)) {
+	if(updatesettings.admin === 'true' && userValidationError){
 		CoreController.handleDocumentQueryErrorResponse({
-			err:new Error('Username is too short'),
-			res:res,
-			req:req
-		});
-	}
-	else if (updatesettings.admin==='true' && (userdata.email===undefined || userdata.email.match(/^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i) === null)) {
-		CoreController.handleDocumentQueryErrorResponse({
-			err:new Error('Invalid email'),
-			res:res,
-			req:req
-		});
-	}
-	else if (updatesettings.admin==='true' && (userdata.password === undefined || userdata.password.length < 8)) {
-		CoreController.handleDocumentQueryErrorResponse({
-			err:new Error('Password is too short'),
-			res:res,
-			req:req
-		});
-	}
-	else if (updatesettings.admin==='true' && (userdata.password !== userdata.passwordconfirm)) {
-		CoreController.handleDocumentQueryErrorResponse({
-			err:new Error('Passwords do not match'),
+			err:userValidationError,
 			res:res,
 			req:req
 		});
@@ -659,34 +632,7 @@ var controller = function(resources){
   CoreController = new ControllerHelper(resources);
   CoreUtilities = new Utilities(resources);
 	appenvironment = appSettings.application.environment;
-
-  CoreController.getPluginViewDefaultTemplate(
-		{
-			viewname:'email/user/welcome',
-			themefileext:appSettings.templatefileextension
-		},
-		function(err,templatepath){
-			if(templatepath ==='email/user/welcome'){
-				templatepath = path.resolve(process.cwd(),'app/views',templatepath+'.'+appSettings.templatefileextension);
-			}
-			User.getWelcomeEmailTemplate({templatefile:templatepath},function(err,emailtemplate){
-				if(err){
-					console.error(err);
-				}
-				else{
-					welcomeemailtemplate = emailtemplate;						  			
-				}
-			});
-		}
-	);
-	CoreMailer.getTransport({appenvironment : appSettings.application.environment},function(err,transport){
-		if(err){
-			console.error(err);
-		}
-		else{
-			emailtransport = transport;						  			
-		}
-	});
+	loginExtSettings = resources.app.controller.extension.install.loginExtSettings;
 
 	return{
 		index:index,
