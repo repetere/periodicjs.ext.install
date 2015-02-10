@@ -163,10 +163,24 @@ var configurePeriodic = function(req,res,next,options){
 
 		async.parallel([
 				function(asyncCB){
-					fs.outputJson(confJsonFilePath,globalconfJson,asyncCB);
+					fs.readJson(confJsonFilePath,function(err,existingGlobalConfJson){
+						if(err || !existingGlobalConfJson){
+							fs.outputJson(confJsonFilePath,globalconfJson,asyncCB);
+						}
+						else{
+							fs.outputJson(confJsonFilePath,extend(existingGlobalConfJson,globalconfJson),asyncCB);
+						}
+					});
 				},
 				function(asyncCB){
-					fs.outputJson(envconfJsonFilePath,envconfJson,asyncCB);
+					fs.readJson(envconfJsonFilePath,function(err,existingEnvConfJson){
+						if(err || !existingEnvConfJson){
+							fs.outputJson(envconfJsonFilePath,envconfJson,asyncCB);
+						}
+						else{
+							fs.outputJson(envconfJsonFilePath,extend(existingEnvConfJson,envconfJson),asyncCB);
+						}
+					});
 				}
 			],
 			function(err,data){
