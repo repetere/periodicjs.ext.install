@@ -1,35 +1,41 @@
 'use strict';
 
-var formToObject = function( formRef ){
+var formToObject = function (formRef) {
 
-	if( !formRef ){ return false; }
+	if (!formRef) {
+		return false;
+	}
 
-	this.formRef       = formRef;
-	this.keyRegex      = /[^\[\]]+/g;
-	this.$form         = null;
+	this.formRef = formRef;
+	this.keyRegex = /[^\[\]]+/g;
+	this.$form = null;
 	this.$formElements = [];
-	this.formObj       = {};
+	this.formObj = {};
 
-	if( !this.setForm() ){ return false; }
-	if( !this.setFormElements() ){ return false; }
+	if (!this.setForm()) {
+		return false;
+	}
+	if (!this.setFormElements()) {
+		return false;
+	}
 
 	return this.setFormObj();
 
 };
 
 // Set the main form object we are working on.
-formToObject.prototype.setForm = function(){
+formToObject.prototype.setForm = function () {
 
-	switch( typeof this.formRef ){
+	switch (typeof this.formRef) {
 
-		case 'string':
-			this.$form = document.getElementById( this.formRef );
+	case 'string':
+		this.$form = document.getElementById(this.formRef);
 		break;
 
-		case 'object':
-			if( this.isDomNode(this.formRef) ){
-				this.$form = this.formRef;
-			}
+	case 'object':
+		if (this.isDomNode(this.formRef)) {
+			this.$form = this.formRef;
+		}
 		break;
 
 	}
@@ -39,27 +45,27 @@ formToObject.prototype.setForm = function(){
 };
 
 // Set the elements we need to parse.
-formToObject.prototype.setFormElements = function(){
+formToObject.prototype.setFormElements = function () {
 	this.$formElements = this.$form.querySelectorAll('input, button, textarea, select');
 	return this.$formElements.length;
 };
 
 // Check to see if the object is a HTML node.
-formToObject.prototype.isDomNode = function( node ){
+formToObject.prototype.isDomNode = function (node) {
 	return typeof node === "object" && "nodeType" in node && node.nodeType === 1;
 };
 
 // Iteration through arrays and objects. Compatible with IE.
-formToObject.prototype.forEach = function( arr, callback ){
+formToObject.prototype.forEach = function (arr, callback) {
 
-	if([].forEach){
+	if ([].forEach) {
 		return [].forEach.call(arr, callback);
 	}
 
 	var i;
-	for(i in arr){
+	for (i in arr) {
 		// Object.prototype.hasOwnProperty instead of arr.hasOwnProperty for IE8 compatibility.
-		if( Object.prototype.hasOwnProperty.call(arr,i) ){
+		if (Object.prototype.hasOwnProperty.call(arr, i)) {
 			callback.call(arr, arr[i]);
 		}
 	}
@@ -69,32 +75,34 @@ formToObject.prototype.forEach = function( arr, callback ){
 }
 
 // Recursive method that adds keys and values of the corresponding fields.
-formToObject.prototype.addChild = function( result, domNode, keys, value ){
+formToObject.prototype.addChild = function (result, domNode, keys, value) {
 
 	// #1 - Single dimensional array.
-	if(keys.length === 1){
+	if (keys.length === 1) {
 
 		// We're only interested in the radio that is checked.
-		if( domNode.nodeName === 'INPUT' && domNode.type === 'radio' ) {
-			if( domNode.checked ){
+		if (domNode.nodeName === 'INPUT' && domNode.type === 'radio') {
+			if (domNode.checked) {
 				return result[keys] = value;
-			} else {
+			}
+			else {
 				return;
 			}
 		}
 
 		// Checkboxes are a special case. We have to grab each checked values
 		// and put them into an array.
-		if( domNode.nodeName === 'INPUT' && domNode.type === 'checkbox' ) {
+		if (domNode.nodeName === 'INPUT' && domNode.type === 'checkbox') {
 
-			if( domNode.checked ){
+			if (domNode.checked) {
 
-				if( !result[keys] ){
+				if (!result[keys]) {
 					result[keys] = [];
 				}
-				return result[keys].push( value );
+				return result[keys].push(value);
 
-			} else {
+			}
+			else {
 				return;
 			}
 
@@ -102,13 +110,13 @@ formToObject.prototype.addChild = function( result, domNode, keys, value ){
 
 		// Multiple select is a special case.
 		// We have to grab each selected option and put them into an array.
-		if( domNode.nodeName === 'SELECT' && domNode.type === 'select-multiple' ) {
+		if (domNode.nodeName === 'SELECT' && domNode.type === 'select-multiple') {
 
 			result[keys] = [];
 			var DOMchilds = domNode.querySelectorAll('option[selected]');
-			if( DOMchilds ){
-				this.forEach(DOMchilds, function(child){
-					result[keys].push( child.value );
+			if (DOMchilds) {
+				this.forEach(DOMchilds, function (child) {
+					result[keys].push(child.value);
 				});
 			}
 			return;
@@ -121,9 +129,9 @@ formToObject.prototype.addChild = function( result, domNode, keys, value ){
 	}
 
 	// #2 - Multi dimensional array.
-	if(keys.length > 1) {
+	if (keys.length > 1) {
 
-		if(!result[keys[0]]){
+		if (!result[keys[0]]) {
 			result[keys[0]] = {};
 		}
 
@@ -135,16 +143,16 @@ formToObject.prototype.addChild = function( result, domNode, keys, value ){
 
 };
 
-formToObject.prototype.setFormObj = function(){
+formToObject.prototype.setFormObj = function () {
 
 	var test, i = 0;
 
-	for(i = 0; i < this.$formElements.length; i++){
+	for (i = 0; i < this.$formElements.length; i++) {
 		// Ignore the element if the 'name' attribute is empty.
 		// Ignore the 'disabled' elements.
-		if( this.$formElements[i].name && !this.$formElements[i].disabled ) {
-			test = this.$formElements[i].name.match( this.keyRegex );
-			this.addChild( this.formObj, this.$formElements[i], test, this.$formElements[i].value );
+		if (this.$formElements[i].name && !this.$formElements[i].disabled) {
+			test = this.$formElements[i].name.match(this.keyRegex);
+			this.addChild(this.formObj, this.$formElements[i], test, this.$formElements[i].value);
 		}
 	}
 
@@ -152,4 +160,4 @@ formToObject.prototype.setFormObj = function(){
 
 }
 
-module.exports =formToObject;
+module.exports = formToObject;

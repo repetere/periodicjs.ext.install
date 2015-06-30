@@ -11,7 +11,7 @@ var appenvironment,
 		extname: 'periodicjs.ext.login'
 	}), './settings.json'),
 	loginSettingJSON,
-	default_new_user_settings ={
+	default_new_user_settings = {
 		settings: {
 			usepassword: true,
 			requireusername: true,
@@ -40,11 +40,11 @@ var appenvironment,
 module.exports = function (periodic) {
 	// express,app,logger,config,db,mongoose
 	appenvironment = periodic.settings.application.environment;
-	try{
+	try {
 		settingJSON = fs.readJsonSync(loginExtSettingsFile);
 	}
-	catch(e){
-		settingJSON = {};		
+	catch (e) {
+		settingJSON = {};
 	}
 	loginSettingJSON = (settingJSON[appenvironment]) ? extend(default_new_user_settings, settingJSON[appenvironment]) : default_new_user_settings;
 	periodic.app.controller.extension.install = {
