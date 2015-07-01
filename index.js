@@ -2,14 +2,8 @@
 var appenvironment,
 	extend = require('utils-merge'),
 	path = require('path'),
-	Extensions = require('periodicjs.core.extensions'),
-	CoreExtension = new Extensions({
-		extensionFilePath: path.resolve(process.cwd(), './content/config/extensions.json')
-	}),
 	fs = require('fs-extra'),
-	loginExtSettingsFile = path.resolve(CoreExtension.getconfigdir({
-		extname: 'periodicjs.ext.login'
-	}), './settings.json'),
+	loginExtSettingsFile = path.join(process.cwd(), 'content/config/extensions/periodicjs.ext.login/settings.json'),
 	loginSettingJSON,
 	default_new_user_settings = {
 		settings: {
