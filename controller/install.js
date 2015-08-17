@@ -52,17 +52,17 @@ var useSocketIOLogger = function () {
 		// 	meta: 'meta'
 		// });
 	});
-	var CustomLogger = winston.transports.CustomLogger = function (options) {
+	var PeriodicInstallLogger = winston.transports.PeriodicInstallLogger = function (options) {
 		// Name this logger
-		this.name = 'customLogger';
+		this.name = 'PeriodicInstallLogger';
 		// Set the level from your options
 		this.level = options.level || 'silly';
 	};
-	util.inherits(CustomLogger, winston.Transport);
+	util.inherits(PeriodicInstallLogger, winston.Transport);
 
-	CustomLogger.prototype.log = function (level, msg, meta, callback) {
+	PeriodicInstallLogger.prototype.log = function (level, msg, meta, callback) {
 		try {
-			// console.log('CustomLogger level, msg, meta:', level, msg, meta);
+			// console.log('PeriodicInstallLogger level, msg, meta:', level, msg, meta);
 			if (io.engine && (meta.asyncadmin || msg.match(/install_log/gi))) {
 				// console.log('socketForLogger.conn.server.clientsCount', socketForLogger.conn.server.clientsCount);
 				io.sockets.emit('log', {
@@ -78,7 +78,7 @@ var useSocketIOLogger = function () {
 			callback(e, null);
 		}
 	};
-	logger.add(CustomLogger, {});
+	logger.add(PeriodicInstallLogger, {});
 };
 
 /**
@@ -162,7 +162,7 @@ var configurePeriodic = function (req, res, next, options) {
 				'cookies': {
 					'cookieParser': updatesettings.cookieparser
 				},
-				'theme': 'periodicjs.theme.reader',
+				// 'theme': 'periodicjs.theme.reader',
 				'session_secret': updatesettings.session_secret,
 				'status': 'active'
 			},
@@ -271,7 +271,7 @@ var configurePeriodic = function (req, res, next, options) {
 				logdata: 'seeding database'
 			});
 			CoreUtilities.async_run_cmd(
-				'node', ['index.js', '--cli', '--extension', 'dbseed', '--task', 'sampledata'],
+				'node', ['index.js', '--cli', '--extension', 'dbseed', '--task', 'sampledata', '--skipextensions'],
 				function (consoleoutput) {
 					update_outputlog({
 						logdata: consoleoutput
@@ -290,7 +290,7 @@ var configurePeriodic = function (req, res, next, options) {
 		else {
 			callback(null, 'skipping seeding database');
 		}
-		// node index.js --cli --extension seed --task sampledata
+		// node index.js --cli --extension dbseed --task sampledata
 	};
 
 	/**
@@ -336,7 +336,7 @@ var configurePeriodic = function (req, res, next, options) {
 							ext_login = currentExtensionsConf.extensions[x];
 							ext_login.enabled = true;
 						}
-						if (currentExtensionsConf.extensions[x].name === 'periodicjs.ext.admin') {
+						if (currentExtensionsConf.extensions[x].name === 'periodicjs.ext.asyncadmin') {
 							ext_admin = currentExtensionsConf.extensions[x];
 							ext_admin.enabled = true;
 						}
@@ -383,7 +383,9 @@ var configurePeriodic = function (req, res, next, options) {
 
 					if (ext_install && ext_defaultroutes && ext_mailer && ext_login && ext_useraccescontrol && ext_scheduledcontent && ext_admin && ext_dbseed) {
 						updateConfSettings.extensions = [ext_install, ext_defaultroutes, ext_mailer, ext_login, ext_useraccescontrol, ext_scheduledcontent, ext_admin, ext_dbseed];
-						fs.outputJson(extfilepath, updateConfSettings, function (err) {
+						fs.outputJson(extfilepath, updateConfSettings, {
+							spaces: 2
+						}, function (err) {
 							if (err) {
 								callback(err, null);
 							}
@@ -420,7 +422,9 @@ var configurePeriodic = function (req, res, next, options) {
 					}
 					if (ext_install) {
 						updateConfSettings = currentExtensionsConf;
-						fs.outputJson(extfilepath, updateConfSettings, function (err) {
+						fs.outputJson(extfilepath, updateConfSettings, {
+							spaces: 2
+						}, function (err) {
 							if (err) {
 								callback(err, null);
 							}
@@ -483,9 +487,9 @@ var configurePeriodic = function (req, res, next, options) {
 	};
 
 	async.series({
+			update_ext_conf: updateExtensionConf,
+			seed_db: seed_db_with_data,
 			create_admin_user: create_user_admin,
-			// update_ext_conf: updateExtensionConf,
-			// seed_db: seed_db_with_data,
 			write_periodic_config: writeConfJson
 		},
 		//final result
@@ -505,6 +509,12 @@ var configurePeriodic = function (req, res, next, options) {
 					process.exit(0);
 				}
 				else {
+					send_server_callback({
+						functionName: 'installComplete',
+						functionData: {
+							message: 'Installed'
+						}
+					});
 					CoreUtilities.restart_app({
 						restartfile: restartfile
 					});

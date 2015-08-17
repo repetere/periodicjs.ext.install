@@ -16,6 +16,7 @@ var StylieNotification = require('stylie.notifications'),
 	admin_config,
 	adminConsoleElementContent,
 	acp,
+	hasrestarted = false,
 	// installadmin,
 	// installform,
 	// consoleOutput,
@@ -72,6 +73,12 @@ window.showErrorNotificaton = function (options) {
 	options.ttl = false;
 	options.type = 'error';
 	window.showStylieNotification(options);
+};
+
+window.installComplete = function () {
+	window.showStylieAlert({
+		message: 'Periodic Successfully Installed'
+	});
 };
 
 var install_button_handler = function (returnBool) {
@@ -171,6 +178,7 @@ var initFormieElement = function () {
 		},
 		beforesubmitcallback: function ( /* event , formelement */ ) {
 			// console.log(event, formelement);
+			classie.remove(document.querySelector('#output-wrapper'), 'ts-hidden');
 			classie.remove(acp, 'ts-hidden');
 			window.showStylieAlert({
 				message: 'Installing Periodic in the background, sit tight'
@@ -197,9 +205,9 @@ var initFormieElement = function () {
 					ttl: errorTTL
 				});
 			}
-			else {
-				console.log('installing');
-			}
+			// else {
+			// 	console.log('installing');
+			// }
 		},
 		errorcallback: function (error, response) {
 			var res = JSON.parse(response.text),
@@ -270,7 +278,7 @@ var logToAdminConsole = function (data) {
 	var logInfoElement = document.createElement('div'),
 		adminMessageLevel = document.createElement('span'),
 		adminMessageMessage = document.createElement('span'),
-		adminMessageMeta = document.createElement('div'),
+		adminMessageMeta = document.createElement('pre'),
 		// acc = document.querySelector('#ts-admin-console-content'),
 		loglevel = data.level || 'log';
 	classie.add(adminMessageMeta, 'ts-sans-serif');
@@ -286,7 +294,9 @@ var logToAdminConsole = function (data) {
 	}
 	logInfoElement.appendChild(adminMessageLevel);
 	logInfoElement.appendChild(adminMessageMessage);
-	logInfoElement.appendChild(adminMessageMeta);
+	if (data.meta) {
+		logInfoElement.appendChild(adminMessageMeta);
+	}
 	adminConsoleElementContent.appendChild(logInfoElement);
 	acp.scrollTop = acp.scrollHeight;
 
@@ -329,11 +339,17 @@ var initServerSocketCallback = function () {
 	});
 	socket.on('reconnect', function () {
 		logToAdminConsole('reconnected socket');
-		window.StylieNotificationObject.dismiss();
 		window.showStylieAlert({
 			message: 'Periodic application restarted.(' + new Date() + ')'
 		});
 		clearTimeout(t);
+		if (hasrestarted === false) {
+			hasrestarted = true;
+			window.alert('reload window');
+			// window.location.reload(true);
+		}
+		window.StylieNotificationObject.dismiss();
+
 	});
 	socket.on('error', function () {
 		logToAdminConsole('socket error');
@@ -348,8 +364,6 @@ var initServerSocketCallback = function () {
 		}
 	});
 };
-
-
 
 var elementSelectors = function () {
 	open_modal_buttons = document.querySelectorAll('.ts-toottip.pop-tooltip');
@@ -380,117 +394,3 @@ var init = function () {
 };
 
 window.addEventListener('load', init, false);
-
-// var showadminoptions = function(e){
-// 	var eTarget = e.target;
-// 	if(eTarget.value==='true'){
-// 		document.getElementById('admin-install-info').style.display='block';
-// 	}
-// 	else{
-// 		document.getElementById('admin-install-info').style.display='none';
-// 	}
-// };
-
-// var installformclick = function(e){
-// 	var eTarget = e.target;
-// 	if(eTarget.getAttribute('class') && eTarget.getAttribute('class').match('pop-tooltip')){
-// 		var modalelement = document.getElementById(eTarget.getAttribute('data-id'));
-// 		window.silkscreenModal.showSilkscreen(modalelement.getAttribute('data-title'),modalelement,14,'default');
-// 	}
-// };
-
-// var getConsoleOutput = function(){
-// 	var t = setInterval(function(){
-// 				getOutputFromFile();
-// 			},2000),
-// 			otf,
-// 			cnt=0,
-// 			lastres='outputlog',
-// 			MAXLOGREQUESTS = 100,
-// 			getRequest = '/install/getlog';
-// 	consoleOutput.innerHTML='';
-
-// 	var getOutputFromFile = function(){
-// 		request
-// 			.get(getRequest)
-// 			.set('Accept', ' text/plain')
-// 			.end(function(error, res){
-// 				// console.log('made request',cnt, error,res);
-
-// 				if(res && res.error){
-// 					window.ribbonNotification.showRibbon( res.error.message || res.text ,8000,'error');
-// 					// console.log('error in ajax for file log data');
-// 					try{
-// 						if((res && res.error) || cnt >MAXLOGREQUESTS){
-// 							clearTimeout(t);
-// 						}
-// 					}
-// 					catch(e){
-// 						console.warn('error',e);
-// 					}
-// 				}
-// 				if(error){
-// 					window.ribbonNotification.showRibbon( error.message || res.text ,8000,'error');
-// 					// console.log('error in ajax for file log data');
-// 					try{
-// 						if((res && res.error) || cnt >MAXLOGREQUESTS){
-// 							clearTimeout(t);
-// 						}
-// 					}
-// 					catch(e){
-// 						console.warn('error',e);
-// 					}
-// 				}
-// 				else{
-// 					if(cnt>MAXLOGREQUESTS){
-// 						console.warn('made '+MAXLOGREQUESTS+' req stop ajax');
-// 						clearTimeout(t);
-// 					}
-// 					// console.log(cnt);
-// 					// console.log(res.text);
-// 					if(res.text!==lastres){
-// 						otf = document.createElement('pre');
-// 						otf.innerHTML=res.text;
-// 						consoleOutput.appendChild(otf);
-// 						consoleOutput.scrollTop=consoleOutput.scrollHeight;
-// 					}
-
-// 					if(res.text.match('====##CONFIGURED##====')){
-// 						window.ribbonNotification.showRibbon( 'installed, refresh window to get started' ,false,'success');
-// 						window.silkscreenModal.showSilkscreen('Install Complete','Lets get <a href="'+window.location.href+'">started</a>. ','default');
-// 						clearTimeout(t);
-// 					}
-// 					else if(res.text.match('====!!ERROR!!====') || res.text.match('====##REMOVED-END##====')){
-// 						// console.error('there was an error in installing periodic');
-// 						var errortext = res.error.message || '';
-// 						window.silkscreenModal.showSilkscreen('Install error','there was an error in installing periodic. '+errortext,14,'error');
-// 						window.ribbonNotification.showRibbon(' there was an error in installing periodic' ,4000,'warn');
-// 						clearTimeout(t);
-// 					}
-// 					lastres=res.text;
-// 					cnt++;
-// 				}
-// 			});
-// 	};
-// };
-
-
-
-// window.addEventListener('load',function(){
-// 	window.silkscreenModal = new silkscreen();
-// 	window.ribbonNotification = new ribbon({type:'info',idSelector:'#_pea_ribbon-element'});
-// 	installadmin = document.getElementById('install-admin-select');
-// 	installform = document.getElementById('install_form');
-// 	consoleOutput = document.getElementById('install-console-output');
-// 	ajaxform.preventEnterSubmitListeners();
-// 	ajaxform.ajaxFormEventListers('._pea-ajaxforms',window.ribbonNotification);
-// 	installadmin.addEventListener('change',showadminoptions,false);
-// 	installform.addEventListener('click',installformclick,false);
-// });
-
-// window.successFormPost = function(/*resdata*/){
-// 	// console.log('resdata',resdata);
-// 	document.getElementById('install-console').style.display='block';
-// 	getConsoleOutput();
-// 	window.ribbonNotification.showRibbon( 'beginning installation' ,4000,'info');
-// };
