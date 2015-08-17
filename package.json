@@ -21,6 +21,10 @@
     "postuninstall": "node uninstall.js"
   },
   "dependencies": {
+    "classie": "^1.0.0",
+    "formie": "^1.0.1",
+    "socket.io-client": "^1.3.6",
+    "validate-js": "^1.5.1"
   },
   "devDependencies": {
     "browserify": "^10.2.4",

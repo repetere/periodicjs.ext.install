@@ -22,13 +22,78 @@ var path = require('path'),
 	restartfile = path.join(process.cwd(), '/content/config/restart.json');
 
 
+var logger,
+	socketForLogger,
+	io = global.io;
+
+var send_server_callback = function (options) {
+	try {
+		if (io.engine) {
+			io.sockets.emit('server_callback', {
+				functionName: options.functionName,
+				functionData: options.functionData
+			});
+		}
+	}
+	catch (e) {
+		logger.error('asyncadmin - send_server_callback e', e);
+	}
+};
+
+var useSocketIOLogger = function () {
+	var util = require('util'),
+		winston = require('winston');
+
+	io.on('connection', function (socket) {
+		socketForLogger = socket;
+		// socketForLogger.emit('log', {
+		// 	level: 'level',
+		// 	msg: 'msg',
+		// 	meta: 'meta'
+		// });
+	});
+	var CustomLogger = winston.transports.CustomLogger = function (options) {
+		// Name this logger
+		this.name = 'customLogger';
+		// Set the level from your options
+		this.level = options.level || 'silly';
+	};
+	util.inherits(CustomLogger, winston.Transport);
+
+	CustomLogger.prototype.log = function (level, msg, meta, callback) {
+		try {
+			// console.log('CustomLogger level, msg, meta:', level, msg, meta);
+			if (io.engine && (meta.asyncadmin || msg.match(/install_log/gi))) {
+				// console.log('socketForLogger.conn.server.clientsCount', socketForLogger.conn.server.clientsCount);
+				io.sockets.emit('log', {
+					level: level,
+					msg: msg,
+					meta: meta
+				});
+			}
+			callback(null, true);
+		}
+		catch (e) {
+			logger.error('useSocketIOLogger e', e);
+			callback(e, null);
+		}
+	};
+	logger.add(CustomLogger, {});
+};
+
 /**
  * output install process error to log file, the ==!!ERROR!!== triggers client to stop querying for updates
  * @param  {object} options logdata,cli
  */
 var errorlog_outputlog = function (options) {
 	var logdata = options.logdata + '\r\n ';
-	logger.error(logdata);
+	logger.error('install_log - errorlog_outputlog', logdata);
+	send_server_callback({
+		functionName: 'showErrorNotificaton',
+		functionData: {
+			message: 'Error: ' + logdata
+		}
+	});
 	fs.appendFile(logfile, logdata + '====!!ERROR!!====', function (err) {
 		if (err) {
 			logger.error(err);
@@ -47,7 +112,7 @@ var errorlog_outputlog = function (options) {
 var update_outputlog = function (options) {
 	var logdata = options.logdata + '\r\n',
 		callback = options.callback;
-
+	logger.debug('install_log - update_outputlog', options.logdata);
 	fs.appendFile(logfile, logdata, function (err) {
 		if (err) {
 			logger.error(err);
@@ -66,23 +131,6 @@ var update_outputlog = function (options) {
 			}
 		}
 	});
-};
-
-/**
- * streams error logfile output to client
- * @param  {object} req 
- * @param  {object} res 
- * @return {object} reponds with an error page or requested view
- */
-var get_outputlog = function (req, res) {
-	var stat = fs.statSync(logfile),
-		readStream = fs.createReadStream(logfile);
-
-	res.writeHead(200, {
-		'Content-Type': ' text/plain',
-		'Content-Length': stat.size
-	});
-	readStream.pipe(res);
 };
 
 /**
@@ -121,12 +169,13 @@ var configurePeriodic = function (req, res, next, options) {
 			envconfJsonFilePath = path.resolve(process.cwd(), 'content/config/environment/' + confenv + '.json'),
 			envconfJson = {},
 			globalconfJson = {};
+
+		confJson.adminnotificationemail = userdata.email;
+		confJson.serverfromemail = userdata.email;
+		confJson.adminnotificationemail_bcc = '';
+		confJson.homepage = req.headers.host;
 		if (updatesettings.appname) {
 			confJson.name = updatesettings.appname;
-		}
-		if (updatesettings.admin) {
-			confJson.adminnotificationemail = userdata.email;
-			confJson.homepage = req.headers.host;
 		}
 		if (updatesettings.themename) {
 			confJson.theme = updatesettings.themename;
@@ -155,6 +204,11 @@ var configurePeriodic = function (req, res, next, options) {
 			break;
 		}
 
+
+		globalconfJson.adminnotificationemail = confJson.adminnotificationemail;
+		globalconfJson.serverfromemail = confJson.serverfromemail;
+		globalconfJson.adminnotificationemail_bcc = confJson.adminnotificationemail_bcc;
+		globalconfJson.homepage = confJson.homepage;
 		globalconfJson.sessions = confJson.sessions;
 		globalconfJson.status = confJson.status;
 		globalconfJson.session_secret = confJson.session_secret;
@@ -165,20 +219,28 @@ var configurePeriodic = function (req, res, next, options) {
 				function (asyncCB) {
 					fs.readJson(confJsonFilePath, function (err, existingGlobalConfJson) {
 						if (err || !existingGlobalConfJson) {
-							fs.outputJson(confJsonFilePath, globalconfJson, asyncCB);
+							fs.outputJson(confJsonFilePath, globalconfJson, {
+								spaces: 2
+							}, asyncCB);
 						}
 						else {
-							fs.outputJson(confJsonFilePath, extend(existingGlobalConfJson, globalconfJson), asyncCB);
+							fs.outputJson(confJsonFilePath, extend(existingGlobalConfJson, globalconfJson), {
+								spaces: 2
+							}, asyncCB);
 						}
 					});
 				},
 				function (asyncCB) {
 					fs.readJson(envconfJsonFilePath, function (err, existingEnvConfJson) {
 						if (err || !existingEnvConfJson) {
-							fs.outputJson(envconfJsonFilePath, envconfJson, asyncCB);
+							fs.outputJson(envconfJsonFilePath, envconfJson, {
+								spaces: 2
+							}, asyncCB);
 						}
 						else {
-							fs.outputJson(envconfJsonFilePath, extend(existingEnvConfJson, envconfJson), asyncCB);
+							fs.outputJson(envconfJsonFilePath, extend(existingEnvConfJson, envconfJson), {
+								spaces: 2
+							}, asyncCB);
 						}
 					});
 				}
@@ -203,6 +265,34 @@ var configurePeriodic = function (req, res, next, options) {
 			});
 	};
 
+	var seed_db_with_data = function (callback) {
+		if (updatesettings.admin === 'use-admin') {
+			update_outputlog({
+				logdata: 'seeding database'
+			});
+			CoreUtilities.async_run_cmd(
+				'node', ['index.js', '--cli', '--extension', 'dbseed', '--task', 'sampledata'],
+				function (consoleoutput) {
+					update_outputlog({
+						logdata: consoleoutput
+					});
+				},
+				function (err, data) {
+					if (err) {
+						callback(err, null);
+					}
+					else {
+						callback(null, data);
+					}
+				}
+			);
+		}
+		else {
+			callback(null, 'skipping seeding database');
+		}
+		// node index.js --cli --extension seed --task sampledata
+	};
+
 	/**
 	 * updates the order of extensions during install process
 	 * @param  {Function} callback async callback
@@ -222,7 +312,7 @@ var configurePeriodic = function (req, res, next, options) {
 			ext_admin = false;
 		updateConfSettings.extensions = [];
 
-		if (updatesettings.admin === 'true') {
+		if (updatesettings.admin === 'use-admin') {
 			fs.readJson(extfilepath, function (err, extConfJSON) {
 				if (err) {
 					callback(err, null);
@@ -350,114 +440,54 @@ var configurePeriodic = function (req, res, next, options) {
 		}
 	};
 
-	async.series([
-			//write database json
-			/*
-			function(callback){
-				var dbjson='',
-						dbjsfile=path.join(process.cwd(),'/content/config/database.js');
-				dbjson+='"use strict";\r\n';
-				dbjson+='\r\n';
-				dbjson+='var mongoose = require("mongoose");\r\n';
-				dbjson+='\r\n';
-				dbjson+='module.exports = {\r\n';
-				dbjson+='	"development":{\r\n';
-				dbjson+='		url: "'+updatesettings.mongoconnectionurl+'",\r\n';
-				dbjson+='		mongoose: mongoose,\r\n';
-				dbjson+='		mongooptions:{}\r\n';
-				dbjson+='	},\r\n';
-				dbjson+='	"production":{\r\n';
-				dbjson+='		url: "'+updatesettings.mongoconnectionurl+'",\r\n';
-				dbjson+='		mongoose: mongoose,\r\n';
-				dbjson+='		mongooptions:{}\r\n';
-				dbjson+='	}\r\n';
-				dbjson+='};\r\n';
+	// };
 
-				// logger.silly('restartfile',restartfile);
-				fs.outputFile(dbjsfile,dbjson,function(err){
-					if(err){
-						callback(err,null);
+	var create_user_admin = function (callback) {
+		if (updatesettings.admin === 'use-admin') {
+			update_outputlog({
+				logdata: 'creating admin user'
+			});
+
+			var newuseroptions = {
+				newuser: userdata,
+				lognewuserin: false,
+				req: req,
+				send_new_user_email: loginExtSettings.new_user_validation.send_new_user_email,
+				welcomeemaildata: {
+					getEmailTemplateFunction: CoreController.getPluginViewDefaultTemplate,
+					emailviewname: 'email/user/welcome',
+					themefileext: appSettings.templatefileextension,
+					sendEmailFunction: CoreMailer.sendEmail,
+					subject: appSettings.name + ' New User Registration',
+					replyto: appSettings.adminnotificationemail,
+					hostname: req.headers.host,
+					appenvironment: appenvironment,
+					appname: appSettings.name,
+				}
+			};
+			User.createNewUserAccount(
+				newuseroptions,
+				function (newusererr, newuser) {
+					if (newusererr) {
+						callback(newusererr, null);
+						// mongoose.connection.close();
 					}
-					else{
-						callback(null,'updated database.json');
+					else {
+						callback(null, newuser);
 					}
 				});
-			},
-			*/
-			//create user data
-			function (callback) {
-				if (updatesettings.admin === 'true') {
-					update_outputlog({
-						logdata: 'creating admin user'
-					});
+		}
+		else {
+			callback(null, 'skipping admin user set up');
+		}
+	};
 
-					var newuseroptions = {
-						newuser: userdata,
-						lognewuserin: false,
-						req: req,
-						send_new_user_email: loginExtSettings.new_user_validation.send_new_user_email,
-						welcomeemaildata: {
-							getEmailTemplateFunction: CoreController.getPluginViewDefaultTemplate,
-							emailviewname: 'email/user/welcome',
-							themefileext: appSettings.templatefileextension,
-							sendEmailFunction: CoreMailer.sendEmail,
-							subject: appSettings.name + ' New User Registration',
-							replyto: appSettings.adminnotificationemail,
-							hostname: req.headers.host,
-							appenvironment: appenvironment,
-							appname: appSettings.name,
-						}
-					};
-					User.createNewUserAccount(
-						newuseroptions,
-						function (newusererr, newuser) {
-							if (newusererr) {
-								callback(newusererr, null);
-								// mongoose.connection.close();
-							}
-							else {
-								callback(null, newuser);
-							}
-						});
-				}
-				else {
-					callback(null, 'skipping admin user set up');
-				}
-			},
-			function (callback) {
-				updateExtensionConf(callback);
-			},
-			function (callback) {
-				if (updatesettings.admin === 'true') {
-					update_outputlog({
-						logdata: 'seeding database'
-					});
-					CoreUtilities.async_run_cmd(
-						'node', ['index.js', '--cli', '--extension', 'dbseed', '--task', 'sampledata'],
-						function (consoleoutput) {
-							update_outputlog({
-								logdata: consoleoutput
-							});
-						},
-						function (err, data) {
-							if (err) {
-								callback(err, null);
-							}
-							else {
-								callback(null, data);
-							}
-						}
-					);
-				}
-				else {
-					callback(null, 'skipping seeding database');
-				}
-				// node index.js --cli --extension seed --task sampledata
-			},
-			function (callback) {
-				writeConfJson(callback);
-			}
-		],
+	async.series({
+			create_admin_user: create_user_admin,
+			// update_ext_conf: updateExtensionConf,
+			// seed_db: seed_db_with_data,
+			write_periodic_config: writeConfJson
+		},
 		//final result
 		function (err
 			//,results
@@ -512,6 +542,15 @@ var testmongoconfig = function (req, res, next, options) {
 	}
 };
 
+var checkUserValidation = function (req, res, next) {
+	req.controllerData = (req.controllerData) ? req.controllerData : {};
+	// console.log('loginSettings', loginSettings);
+	req.controllerData.checkuservalidation = loginExtSettings.new_user_validation;
+	req.controllerData.checkuservalidation.useComplexity = loginExtSettings.complexitySettings.useComplexity;
+	req.controllerData.checkuservalidation.complexity = loginExtSettings.complexitySettings.settings.weak;
+	next();
+};
+
 /**
  * handles install script http post and checks input for valid credentials for creating an admin user
  * @param  {object} req 
@@ -531,12 +570,14 @@ var update = function (req, res, next) {
 		d = new Date(),
 		userValidationError = User.checkValidation(extend({
 			newuser: userdata
-		}, loginExtSettings.new_user_validation));
+		}, req.controllerData.checkuservalidation));
 	updatesettings.mongoconnectionurl = databaseurl;
 
-	if (updatesettings.admin === 'true' && userValidationError) {
+	if (updatesettings.admin === 'use-admin' && userValidationError) {
+		logger.debug('install_log - userValidationError', userValidationError.message);
+		res.status(500);
 		CoreController.handleDocumentQueryErrorResponse({
-			err: userValidationError,
+			err: userValidationError.message,
 			res: res,
 			req: req
 		});
@@ -561,7 +602,7 @@ var update = function (req, res, next) {
 						responseData: {
 							result: 'success',
 							data: {
-								message: 'allgood'
+								message: 'Installing Periodic'
 							}
 						}
 					});
@@ -587,8 +628,16 @@ var index = function (req, res) {
 	};
 
 	var token = function () {
-		return rand() + rand(); // to make it longer
+		var tokenval = rand() + rand(); // to make it longer
+		tokenval = tokenval.replace(tokenval.charAt(0), tokenval.charAt(0).toUpperCase());
+		return tokenval;
 	};
+
+	setTimeout(function () {
+		logger.debug('install_log - test message', {
+			somedata: 'rand obj'
+		});
+	}, 1000);
 
 	CoreController.getPluginViewDefaultTemplate({
 			viewname: 'install/index',
@@ -642,16 +691,28 @@ var controller = function (resources) {
 	logger = resources.logger;
 	appSettings = resources.settings;
 	userSchema = require(path.resolve(process.cwd(), 'app/model/user.js'));
+	var userroleSchema = require(path.resolve(process.cwd(), 'app/model/userrole.js')),
+		itemSchema = require(path.resolve(process.cwd(), 'app/model/item.js')),
+		categorySchema = require(path.resolve(process.cwd(), 'app/model/category.js')),
+		tagSchema = require(path.resolve(process.cwd(), 'app/model/tag.js')),
+		contenttypeSchema = require(path.resolve(process.cwd(), 'app/model/contenttype.js'));
 	User = mongoose.model('User', userSchema);
-	CoreController = new ControllerHelper(resources);
-	CoreUtilities = new Utilities(resources);
+	mongoose.model('Userrole', userroleSchema);
+	mongoose.model('Item', itemSchema);
+	mongoose.model('Category', categorySchema);
+	mongoose.model('Tag', tagSchema);
+	mongoose.model('Contenttype', contenttypeSchema);
+	useSocketIOLogger();
+	CoreController = resources.core.controller;
+	CoreUtilities = resources.core.utilities;
+	CoreMailer = resources.core.mailer;
 	appenvironment = appSettings.application.environment;
 	loginExtSettings = resources.app.controller.extension.install.loginExtSettings;
 
 	return {
 		index: index,
 		update: update,
-		get_outputlog: get_outputlog
+		checkUserValidation: checkUserValidation
 	};
 };
 

@@ -15,9 +15,32 @@ var appenvironment,
 		new_user_validation: {
 			checkusername: true,
 			checkpassword: true,
-			length_of_username: 2,
+			length_of_username: 1,
 			length_of_password: 8,
 			send_new_user_email: true
+		},
+		complexitySettings: {
+			useComplexity: true,
+			settings: {
+				weak: {
+					uppercase: 1,
+					lowercase: 1,
+					min: 8
+				},
+				medium: {
+					uppercase: 1,
+					lowercase: 1,
+					digit: 1,
+					min: 8
+				},
+				strong: {
+					uppercase: 1,
+					lowercase: 1,
+					digit: 1,
+					special: 1,
+					min: 8
+				}
+			}
 		}
 	},
 	settingJSON;
@@ -48,14 +71,16 @@ module.exports = function (periodic) {
 		install: require('./controller/install')(periodic)
 	};
 	var installRouter = periodic.express.Router(),
-		installController = periodic.app.controller.extension.install.install;
+		installController = periodic.app.controller.extension.install.install,
+		homeController = require(path.join(process.cwd(), 'app/controller/home'))(periodic);
 
 	installRouter.get('*', global.CoreCache.disableCache);
 	installRouter.get('/', installController.index);
 	installRouter.get('/install', installController.index);
-	installRouter.get('/install/getlog', installController.get_outputlog);
-	installRouter.post('/install/updateconfig', installController.update);
+	// installRouter.get('/install/getlog', installController.get_outputlog);
+	installRouter.post('/install/updateconfig', installController.checkUserValidation, installController.update);
 	installRouter.get('/*', installController.index);
+	installRouter.use('*', homeController.catch404);
 
 	periodic.app.use(installRouter);
 	return periodic;
