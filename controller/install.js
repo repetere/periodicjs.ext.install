@@ -309,7 +309,8 @@ var configurePeriodic = function (req, res, next, options) {
 			ext_defaultroutes = false,
 			ext_scheduledcontent = false,
 			ext_useraccescontrol = false,
-			ext_admin = false;
+			ext_async_cms = false,
+			ext_asyncadmin = false;
 		updateConfSettings.extensions = [];
 
 		if (updatesettings.admin === 'use-admin') {
@@ -337,8 +338,8 @@ var configurePeriodic = function (req, res, next, options) {
 							ext_login.enabled = true;
 						}
 						if (currentExtensionsConf.extensions[x].name === 'periodicjs.ext.asyncadmin') {
-							ext_admin = currentExtensionsConf.extensions[x];
-							ext_admin.enabled = true;
+							ext_asyncadmin = currentExtensionsConf.extensions[x];
+							ext_asyncadmin.enabled = true;
 						}
 						if (currentExtensionsConf.extensions[x].name === 'periodicjs.ext.scheduled_content') {
 							ext_scheduledcontent = currentExtensionsConf.extensions[x];
@@ -351,6 +352,10 @@ var configurePeriodic = function (req, res, next, options) {
 						if (currentExtensionsConf.extensions[x].name === 'periodicjs.ext.dbseed') {
 							ext_dbseed = currentExtensionsConf.extensions[x];
 							ext_dbseed.enabled = true;
+						}
+						if (currentExtensionsConf.extensions[x].name === 'periodicjs.ext.async_cms') {
+							ext_async_cms = currentExtensionsConf.extensions[x];
+							ext_async_cms.enabled = true;
 						}
 					}
 					//check installs
@@ -368,8 +373,8 @@ var configurePeriodic = function (req, res, next, options) {
 						console.log('ext_login', ext_login);
 						callback(new Error('Invalid extension installation: periodicjs.ext.login'), null);
 					}
-					if (!ext_admin) {
-						callback(new Error('Invalid extension installation: periodicjs.ext.admin'), null);
+					if (!ext_asyncadmin) {
+						callback(new Error('Invalid extension installation: periodicjs.ext.asyncadmin'), null);
 					}
 					if (!ext_dbseed) {
 						callback(new Error('Invalid extension installation: periodicjs.ext.dbseed'), null);
@@ -380,9 +385,13 @@ var configurePeriodic = function (req, res, next, options) {
 					if (!ext_useraccescontrol) {
 						callback(new Error('Invalid extension installation: periodicjs.ext.user_access_control'), null);
 					}
+					if (!ext_async_cms) {
+						callback(new Error('Invalid extension installation: periodicjs.ext.async_cms'), null);
+					}
 
-					if (ext_install && ext_defaultroutes && ext_mailer && ext_login && ext_useraccescontrol && ext_scheduledcontent && ext_admin && ext_dbseed) {
-						updateConfSettings.extensions = [ext_install, ext_defaultroutes, ext_mailer, ext_login, ext_useraccescontrol, ext_scheduledcontent, ext_admin, ext_dbseed];
+
+					if (ext_install && ext_defaultroutes && ext_mailer && ext_login && ext_useraccescontrol && ext_scheduledcontent && ext_asyncadmin && ext_async_cms && ext_dbseed) {
+						updateConfSettings.extensions = [ext_install, ext_defaultroutes, ext_mailer, ext_login, ext_useraccescontrol, ext_scheduledcontent, ext_async_cms, ext_asyncadmin, ext_dbseed];
 						fs.outputJson(extfilepath, updateConfSettings, {
 							spaces: 2
 						}, function (err) {
@@ -713,9 +722,9 @@ var controller = function (resources) {
 	mongoose.model('Tag', tagSchema);
 	mongoose.model('Contenttype', contenttypeSchema);
 	useSocketIOLogger();
-	CoreController = resources.core.controller;
-	CoreUtilities = resources.core.utilities;
-	CoreMailer = resources.core.mailer;
+	CoreController = new ControllerHelper(resources);
+	CoreUtilities = new Utilities(resources);
+	// CoreMailer = resources.core.mailer;
 	appenvironment = appSettings.application.environment;
 	loginExtSettings = resources.app.controller.extension.install.loginExtSettings;
 

@@ -1,7 +1,7 @@
 {
   "name": "periodicjs.ext.install",
   "description": "install extensions for periodicjs",
-  "version": "5.9.9",
+  "version": "5.9.91",
   "main": "index.js",
   "engines": {
     "node": ">=0.12.x"

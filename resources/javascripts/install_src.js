@@ -345,8 +345,8 @@ var initServerSocketCallback = function () {
 		clearTimeout(t);
 		if (hasrestarted === false) {
 			hasrestarted = true;
-			window.alert('reload window');
-			// window.location.reload(true);
+			// window.alert('reload window');
+			window.location.reload(true);
 		}
 		window.StylieNotificationObject.dismiss();
 
