@@ -391,7 +391,7 @@ var configurePeriodic = function (req, res, next, options) {
 
 
 					if (ext_install && ext_defaultroutes && ext_mailer && ext_login && ext_useraccescontrol && ext_scheduledcontent && ext_asyncadmin && ext_async_cms && ext_dbseed) {
-						updateConfSettings.extensions = [ext_install, ext_defaultroutes, ext_mailer, ext_login, ext_useraccescontrol, ext_scheduledcontent,  ext_asyncadmin, ext_async_cms, ext_dbseed];
+						updateConfSettings.extensions = [ext_install, ext_defaultroutes, ext_mailer, ext_login, ext_useraccescontrol, ext_scheduledcontent, ext_asyncadmin, ext_async_cms, ext_dbseed];
 						fs.outputJson(extfilepath, updateConfSettings, {
 							spaces: 2
 						}, function (err) {
@@ -652,11 +652,11 @@ var index = function (req, res) {
 		return tokenval;
 	};
 
-	setTimeout(function () {
-		logger.debug('install_log - test message', {
-			somedata: 'rand obj'
-		});
-	}, 1000);
+	// setTimeout(function () {
+	// 	logger.debug('install_log - test message', {
+	// 		somedata: 'rand obj'
+	// 	});
+	// }, 1000);
 
 	CoreController.getPluginViewDefaultTemplate({
 			viewname: 'install/index',

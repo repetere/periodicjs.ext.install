@@ -384,6 +384,7 @@ var elementEventListeners = function () {
 
 
 var init = function () {
+	// console.log('works now');
 	elementSelectors();
 	elementEventListeners();
 	PeriodicModal = new StylieModals({});
