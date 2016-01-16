@@ -721,7 +721,9 @@ var controller = function (resources) {
 	mongoose.model('Category', categorySchema);
 	mongoose.model('Tag', tagSchema);
 	mongoose.model('Contenttype', contenttypeSchema);
-	useSocketIOLogger();
+	if(io){
+		useSocketIOLogger();
+	}
 	CoreController = new ControllerHelper(resources);
 	CoreUtilities = new Utilities(resources);
 	// CoreMailer = resources.core.mailer;
