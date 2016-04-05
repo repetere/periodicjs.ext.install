@@ -28,6 +28,7 @@ var logger,
 
 var send_server_callback = function (options) {
 	try {
+	io = global.io;
 		if (io.engine) {
 			io.sockets.emit('server_callback', {
 				functionName: options.functionName,
@@ -44,6 +45,7 @@ var useSocketIOLogger = function () {
 	var util = require('util'),
 		winston = require('winston');
 
+	io = global.io;
 	io.on('connection', function (socket) {
 		socketForLogger = socket;
 		// socketForLogger.emit('log', {
@@ -113,6 +115,16 @@ var update_outputlog = function (options) {
 	var logdata = options.logdata + '\r\n',
 		callback = options.callback;
 	logger.debug('install_log - update_outputlog', options.logdata);
+
+	io = global.io;
+	if(io && io.sockets){
+		io.sockets.emit('log', {
+			level: 'debug',
+			msg: options.logdata,
+		});
+	}
+
+
 	fs.appendFile(logfile, logdata, function (err) {
 		if (err) {
 			logger.error(err);
@@ -515,6 +527,9 @@ var configurePeriodic = function (req, res, next, options) {
 				// logger.silly(results);
 				if (options.cli) {
 					logger.info('installed, config.conf updated \r\n  ====##CONFIGURED##====');
+					CoreUtilities.restart_app({
+						restartfile: restartfile
+					});
 					process.exit(0);
 				}
 				else {

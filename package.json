@@ -1,40 +1,4 @@
 {
-  "_args": [
-    [
-      "periodicjs.ext.install@5.9.92",
-      "/Users/yawetse/Developer/github/test/node424/node_modules/periodicjs"
-    ],
-    [
-      "periodicjs.ext.install@6.0.0",
-      "/Users/yawetse/Developer/test/grunttest/node_modules/periodicjs"
-    ]
-  ],
-  "_from": "periodicjs.ext.install@6.0.0",
-  "_id": "periodicjs.ext.install@6.0.0",
-  "_inCache": true,
-  "_installable": true,
-  "_location": "/periodicjs.ext.install",
-  "_nodeVersion": "0.12.6",
-  "_npmUser": {
-    "email": "yaw.etse@gmail.com",
-    "name": "yawetse"
-  },
-  "_npmVersion": "2.11.2",
-  "_phantomChildren": {},
-  "_requested": {
-    "name": "periodicjs.ext.install",
-    "raw": "periodicjs.ext.install@6.0.0",
-    "rawSpec": "6.0.0",
-    "scope": null,
-    "spec": "6.0.0",
-    "type": "version"
-  },
-  "_requiredBy": [
-    "#USER"
-  ],
-  "_shrinkwrap": null,
-  "_spec": "periodicjs.ext.install@6.0.0",
-  "_where": "/Users/yawetse/Developer/test/grunttest/node_modules/periodicjs",
   "author": {
     "email": "yaw.etse@gmail.com",
     "name": "Yaw Joseph Etse",
@@ -75,8 +39,8 @@
   },
   "directories": {},
   "dist": {
-    "shasum": "6a83af84b2c15023d7615f8ae54acc14822fe6b1",
-    "tarball": "http://registry.npmjs.org/periodicjs.ext.install/-/periodicjs.ext.install-6.0.0.tgz"
+    "shasum": "63e2bf32aabc7b7ffa9670fc39f696826331cd9d",
+    "tarball": "http://registry.npmjs.org/periodicjs.ext.install/-/periodicjs.ext.install-6.0.1.tgz"
   },
   "engines": {
     "node": ">=4.2.x"
@@ -89,8 +53,8 @@
   "main": "index.js",
   "maintainers": [
     {
-      "name": "yawetse",
-      "email": "yaw.etse@gmail.com"
+      "email": "yaw.etse@gmail.com",
+      "name": "yawetse"
     }
   ],
   "name": "periodicjs.ext.install",
@@ -105,5 +69,5 @@
     "postuninstall": "node uninstall.js",
     "test": "mocha -R spec --recursive"
   },
-  "version": "6.0.1"
+  "version": "7.0.0"
 }

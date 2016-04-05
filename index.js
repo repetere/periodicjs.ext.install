@@ -67,6 +67,22 @@ module.exports = function (periodic) {
 	periodic.app.controller.extension.install = {
 		loginExtSettings: loginSettingJSON
 	};
+	if(!periodic.core){
+		var 
+	Utilities = require('periodicjs.core.utilities'),
+	Controllers = require('periodicjs.core.controller');
+		require(path.join(__dirname,'../../content/config/model'))({
+			mongoose: periodic.db.mongoose,
+			dburl: periodic.db.url,
+			dboptions: periodic.db.mongooptions,
+			debug: periodic.settings.debug,
+			periodic: periodic
+		});
+		periodic.core = {
+			controller: new Controllers(periodic),
+			utilities: new Utilities(periodic)
+		};
+	}
 	periodic.app.controller.extension.install = {
 		install: require('./controller/install')(periodic)
 	};
