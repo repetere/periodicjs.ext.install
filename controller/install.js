@@ -196,6 +196,7 @@ var configurePeriodic = function (req, res, next, options) {
 		case 'mongo':
 			confJson.sessions = {
 				'enabled': true,
+		    "ttl_in_seconds":86400,
 				'type': 'mongo'
 			};
 			confJson.crsf = true;
