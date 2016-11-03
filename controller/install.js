@@ -725,19 +725,9 @@ var controller = function (resources) {
 	databaseurl = resources.db.url;
 	logger = resources.logger;
 	appSettings = resources.settings;
-	userSchema = require(path.resolve(process.cwd(), 'app/model/user.js'));
-	var userroleSchema = require(path.resolve(process.cwd(), 'app/model/userrole.js')),
-		itemSchema = require(path.resolve(process.cwd(), 'app/model/item.js')),
-		categorySchema = require(path.resolve(process.cwd(), 'app/model/category.js')),
-		tagSchema = require(path.resolve(process.cwd(), 'app/model/tag.js')),
-		contenttypeSchema = require(path.resolve(process.cwd(), 'app/model/contenttype.js'));
-	User = mongoose.model('User', userSchema);
-	mongoose.model('Userrole', userroleSchema);
-	mongoose.model('Item', itemSchema);
-	mongoose.model('Category', categorySchema);
-	mongoose.model('Tag', tagSchema);
-	mongoose.model('Contenttype', contenttypeSchema);
-	if(io){
+	User = mongoose.model('User');
+
+	if (io) {
 		useSocketIOLogger();
 	}
 	CoreController = new ControllerHelper(resources);
